@@ -7,14 +7,14 @@ import { summarizeEntries } from '@/ai/flows/ai-summaries';
 import { generateSuggestions } from '@/ai/flows/activity-suggestions';
 import { generateWeeklySummary as genWeeklySummary } from '@/ai/flows/weekly-summary';
 import type { JournalEntry, ActivitySuggestion } from '../types';
-import { subDays, isAfter } from 'date-fns';
+import { subDays, isAfter, formatISO } from 'date-fns';
 
 
 // This is a mock database. In a real application, you would use a proper database.
 const mockDatabase: JournalEntry[] = [
     {
     id: '1',
-    created_at: '2024-08-05T10:00:00Z',
+    created_at: formatISO(subDays(new Date(), 1)),
     content: "Feeling really optimistic about the new project. Had a great brainstorming session with the team.",
     mood: 'excited',
     ai_affirmation: "It's wonderful that you're feeling so positive and energized. Your enthusiasm is a powerful asset. Keep nurturing that collaborative spirit!",
@@ -22,7 +22,7 @@ const mockDatabase: JournalEntry[] = [
   },
   {
     id: '2',
-    created_at: '2024-08-04T14:30:00Z',
+    created_at: formatISO(subDays(new Date(), 2)),
     content: "A bit of a slow day. Tried to focus but found my mind wandering. Watched a movie in the evening to relax.",
     mood: 'neutral',
     ai_affirmation: "It's okay to have days where focus doesn't come easily. Allowing yourself time to rest and recharge is just as productive as a busy day. Tomorrow is a new opportunity.",
@@ -30,7 +30,7 @@ const mockDatabase: JournalEntry[] = [
   },
   {
     id: '3',
-    created_at: '2024-08-03T21:15:00Z',
+    created_at: formatISO(subDays(new Date(), 3)),
     content: "Feeling a little down today. Thinking about past mistakes and feeling some regret. It's hard to shake off sometimes.",
     mood: 'sad',
     ai_affirmation: "It takes courage to confront difficult feelings. Remember that your past doesn't define your present or future. Be kind to yourself; you're navigating your journey with strength.",
