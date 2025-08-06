@@ -12,3 +12,8 @@ export type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
 };
+
+export type ActivitySuggestion = {
+  title: string;
+  description: string;
+};

@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { generateAffirmation } from '@/ai/flows/ai-affirmations';
 import { summarizeEntries } from '@/ai/flows/ai-summaries';
-import type { JournalEntry } from '../types';
+import { generateSuggestions } from '@/ai/flows/activity-suggestions';
+import type { JournalEntry, ActivitySuggestion } from '../types';
 
 // This is a mock database. In a real application, you would use a proper database.
 const mockDatabase: JournalEntry[] = [
@@ -63,6 +64,9 @@ export async function addJournalEntry(values: z.infer<typeof formSchema>) {
   });
 
   mockDatabase.unshift(newEntry);
+  
+  cachedSummary = null;
+  cachedSuggestions = null;
 
   revalidatePath('/journal');
   revalidatePath('/dashboard');
@@ -103,6 +107,9 @@ export async function updateJournalEntry(id: string, values: z.infer<typeof form
     });
   }
 
+  cachedSummary = null;
+  cachedSuggestions = null;
+
   revalidatePath('/journal');
   revalidatePath('/dashboard');
   revalidatePath('/insights');
@@ -116,21 +123,21 @@ export async function deleteJournalEntry(id: string) {
     throw new Error('Entry not found');
   }
   
+  cachedSummary = null;
+  cachedSuggestions = null;
+
   revalidatePath('/journal');
   revalidatePath('/dashboard');
   revalidatePath('/insights');
 }
 
 let cachedSummary: { timestamp: number, summary: string } | null = null;
-let lastEntryCount = mockDatabase.length;
-
+let lastEntryCountForSummary = -1;
 
 export async function generateSummary(): Promise<{ summary?: string, error?: string }> {
     const entries = await getJournalEntries();
 
-    // If there are no new entries, return the cached summary if available
-    if (entries.length === lastEntryCount && cachedSummary) {
-      // Regenerate summary every 5 minutes to allow for affirmations to be added
+    if (entries.length === lastEntryCountForSummary && cachedSummary) {
       if (Date.now() - cachedSummary.timestamp < 5 * 60 * 1000) {
         return { summary: cachedSummary.summary };
       }
@@ -143,13 +150,41 @@ export async function generateSummary(): Promise<{ summary?: string, error?: str
     try {
         const { summary } = await summarizeEntries({ entries: entries.map(e => e.content) });
         
-        // Cache the new summary and entry count
-        lastEntryCount = entries.length;
+        lastEntryCountForSummary = entries.length;
         cachedSummary = { summary, timestamp: Date.now() };
 
         return { summary };
     } catch (e) {
         console.error("AI summary generation failed:", e);
         return { error: 'Failed to generate summary from AI.' };
+    }
+}
+
+let cachedSuggestions: { timestamp: number, suggestions: ActivitySuggestion[] } | null = null;
+let lastEntryCountForSuggestions = -1;
+
+export async function generateActivitySuggestions(): Promise<{ suggestions?: ActivitySuggestion[], error?: string }> {
+    const entries = await getJournalEntries();
+
+    if (entries.length === lastEntryCountForSuggestions && cachedSuggestions) {
+      if (Date.now() - cachedSuggestions.timestamp < 5 * 60 * 1000) {
+        return { suggestions: cachedSuggestions.suggestions };
+      }
+    }
+
+    if (entries.length < 3) {
+        return { error: 'Not enough entries to generate suggestions. Write at least three entries to get started.' };
+    }
+
+    try {
+        const result = await generateSuggestions({ entries: entries.slice(0, 5).map(e => e.content) });
+        
+        lastEntryCountForSuggestions = entries.length;
+        cachedSuggestions = { suggestions: result.suggestions, timestamp: Date.now() };
+
+        return { suggestions: result.suggestions };
+    } catch (e) {
+        console.error("AI suggestion generation failed:", e);
+        return { error: 'Failed to generate suggestions from AI.' };
     }
 }
