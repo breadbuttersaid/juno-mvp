@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils';
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/journal', label: 'Journal', icon: BookOpen },
-  { href: '/insights', label: 'AI Insights', icon: BarChart3 },
-  { href: '/chat', label: 'AI Chat', icon: Bot },
+  { href: '/insights', label: 'My Insights', icon: BarChart3 },
+  { href: '/chat', label: 'AI Companion', icon: Bot },
   { href: '/export', label: 'Export', icon: FileDown },
 ];
 

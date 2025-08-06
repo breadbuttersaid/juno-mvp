@@ -1,9 +1,9 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, CalendarHeart, PlusCircle, ArrowRight } from 'lucide-react';
+import { Trophy, PlusCircle, Smile, Frown, Meh, Sparkles, Heart } from 'lucide-react';
 import type { JournalEntry } from '@/lib/types';
-import { format, subDays, startOfWeek, endOfWeek, parseISO } from 'date-fns';
+import { format, subDays, parseISO } from 'date-fns';
 import { getJournalEntries } from '@/lib/actions/journal';
 import Link from 'next/link';
 import {
@@ -11,7 +11,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   ChartConfig,
-  ChartStyle,
 } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useEffect, useState } from 'react';
@@ -30,11 +29,12 @@ function calculateStreak(entries: Pick<JournalEntry, 'created_at'>[]): number {
   // Check for today's entry
   if (entryDates.has(currentDate.toDateString())) {
     currentStreak++;
+    currentDate.setDate(currentDate.getDate() - 1);
   } else {
     // If no entry today, check starting from yesterday
     currentDate.setDate(currentDate.getDate() - 1);
   }
-
+  
   while (entryDates.has(currentDate.toDateString())) {
     currentStreak++;
     currentDate.setDate(currentDate.getDate() - 1);
@@ -46,35 +46,33 @@ function calculateStreak(entries: Pick<JournalEntry, 'created_at'>[]): number {
 function MoodChart({ entries }: { entries: JournalEntry[] }) {
   const last7Days = Array.from({ length: 7 }).map((_, i) => subDays(new Date(), i)).reverse();
 
+  const moodToValue = {
+    happy: 4,
+    excited: 5,
+    neutral: 3,
+    sad: 2,
+    anxious: 1,
+    none: 0
+  };
+
   const data = last7Days.map(date => {
     const entry = entries.find(e => format(parseISO(e.created_at), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
+    const mood = entry?.mood || 'none';
     return {
       date: format(date, 'EEE'),
-      mood: entry ? entry.mood : 'none',
-      value: entry ? { happy: 3, neutral: 2, sad: 1 }[entry.mood] : 0,
+      mood: mood,
+      value: moodToValue[mood as keyof typeof moodToValue] || 0,
     };
   });
 
   const chartConfig = {
-    value: {
-      label: "Mood",
-    },
-    happy: {
-      label: "Happy",
-      color: "hsl(var(--chart-1))",
-    },
-    neutral: {
-      label: "Neutral",
-      color: "hsl(var(--chart-2))",
-    },
-    sad: {
-      label: "Sad",
-      color: "hsl(var(--chart-3))",
-    },
-     none: {
-      label: "No Entry",
-      color: "hsl(var(--muted))",
-    }
+    value: { label: "Mood" },
+    happy: { label: "Happy", color: "hsl(var(--chart-1))" },
+    excited: { label: "Excited", color: "hsl(var(--chart-5))" },
+    neutral: { label: "Neutral", color: "hsl(var(--chart-2))" },
+    sad: { label: "Sad", color: "hsl(var(--chart-3))" },
+    anxious: { label: "Anxious", color: "hsl(var(--chart-4))" },
+    none: { label: "No Entry", color: "hsl(var(--muted))" }
   } satisfies ChartConfig;
   
   return (
@@ -85,7 +83,7 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-          <BarChart accessibilityLayer data={data}>
+          <BarChart accessibilityLayer data={data} margin={{ top: 20, right: 20, left: -10, bottom: 0 }}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -93,11 +91,28 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
               tickMargin={10}
               axisLine={false}
             />
-            <YAxis hide={true} domain={[0, 3]} />
-            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+            <YAxis hide={true} domain={[0, 5]} />
+            <ChartTooltip 
+              cursor={false}
+              content={<ChartTooltipContent 
+                hideLabel 
+                formatter={(value, name, props) => (
+                  <div className="flex items-center gap-2">
+                     <div
+                        className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                        style={{ backgroundColor: chartConfig[props.payload.mood as keyof typeof chartConfig]?.color }}
+                      />
+                    <div className="flex flex-col">
+                      <span className="font-bold">{chartConfig[props.payload.mood as keyof typeof chartConfig]?.label}</span>
+                      <span className="text-muted-foreground text-xs">{props.payload.date}</span>
+                    </div>
+                  </div>
+                )}
+              />}
+            />
             <Bar dataKey="value" radius={8}>
-                {data.map((d) => (
-                    <div key={d.date} style={{ '--color': `hsl(var(--${d.mood}))` }} />
+                {data.map((d, i) => (
+                    <div key={i} style={{ '--color': chartConfig[d.mood as keyof typeof chartConfig]?.color }} />
                 ))}
             </Bar>
           </BarChart>
@@ -119,7 +134,7 @@ function RecentEntries({ entries }: { entries: JournalEntry[] }) {
         {recent.length > 0 ? (
           recent.map(entry => (
             <div key={entry.id} className="p-4 rounded-lg border bg-secondary/30">
-              <p className="font-semibold text-sm text-foreground mb-1">{format(parseISO(entry.created_at), 'MMMM d, yyyy')}</p>
+              <p className="font-semibold text-sm text-foreground mb-1">{format(parseISO(entry.created_at), 'MMMM d, yyyy, p')}</p>
               <p className="line-clamp-2 text-sm text-muted-foreground">{entry.content}</p>
             </div>
           ))
@@ -159,8 +174,9 @@ export default function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Skeleton className="h-40" />
             <Skeleton className="h-40" />
-            <Skeleton className="h-40 lg:col-span-3" />
-            <Skeleton className="h-64 md:col-span-2 lg:col-span-3" />
+            <Skeleton className="h-40" />
+            <Skeleton className="h-64 md:col-span-3" />
+            <Skeleton className="h-64 md:col-span-3" />
         </div>
       </div>
     )
@@ -214,10 +230,10 @@ export default function DashboardPage() {
             </CardContent>
         </Card>
       
-        <div className="md:col-span-2 lg:col-span-3">
+        <div className="md:col-span-3">
              <MoodChart entries={entries} />
         </div>
-        <div className="md:col-span-2 lg:col-span-3">
+        <div className="md:col-span-3">
           <RecentEntries entries={entries} />
         </div>
         

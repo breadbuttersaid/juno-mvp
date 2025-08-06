@@ -11,13 +11,25 @@ import type { ChatMessage } from '@/lib/types';
 import { aiChat } from '@/ai/flows/ai-chat';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { getJournalEntries } from '@/lib/actions/journal';
+import type { JournalEntry } from '@/lib/types';
 
 export default function ChatPage() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Fetch journal entries on initial load
+    const loadEntries = async () => {
+      const entries = await getJournalEntries();
+      setJournalEntries(entries);
+    }
+    loadEntries();
+  }, []);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -35,9 +47,14 @@ export default function ChatPage() {
 
     startTransition(async () => {
       try {
-        // In a real app, you would pass previous entries here.
-        // For simplicity, we are not passing them in this example.
-        const { response } = await aiChat({ userId: '1', message: input, previousEntries: [] });
+        const previousEntries = journalEntries.map(e => ({
+            id: e.id,
+            date: e.created_at,
+            mood: e.mood,
+            text: e.content,
+        }));
+        
+        const { response } = await aiChat({ userId: '1', message: input, previousEntries });
         const aiMessage: ChatMessage = { role: 'assistant', content: response };
         setMessages((prev) => [...prev, aiMessage]);
       } catch (error) {
@@ -57,10 +74,10 @@ export default function ChatPage() {
       <CardHeader>
         <CardTitle className="font-headline text-3xl flex items-center gap-2">
           <Bot />
-          AI Companion Chat
+          AI Companion
         </CardTitle>
         <CardDescription>
-          Talk about anything on your mind. Your AI friend is here to listen.
+          Talk about what's on your mind. Your AI friend is here to listen, reflect on your past entries, and help you explore your thoughts.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
@@ -81,7 +98,7 @@ export default function ChatPage() {
                 )}
                 <div
                   className={cn(
-                    'max-w-sm rounded-lg px-4 py-2 text-sm',
+                    'max-w-md rounded-lg px-4 py-2 text-sm',
                     message.role === 'user'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'

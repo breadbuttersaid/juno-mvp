@@ -1,7 +1,7 @@
 export type JournalEntry = {
   id: string;
   created_at: string;
-  mood: 'happy' | 'sad' | 'neutral';
+  mood: 'happy' | 'excited' | 'neutral' | 'sad' | 'anxious';
   content: string;
   ai_affirmation: string | null;
   user_id: string;

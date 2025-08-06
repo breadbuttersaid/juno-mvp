@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Smile, Frown, Meh } from 'lucide-react';
+import { PlusCircle, Smile, Frown, Meh, Sparkles, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import type { JournalEntry } from '@/lib/types';
@@ -12,8 +12,12 @@ function MoodIcon({ mood, className }: { mood: JournalEntry['mood']; className?:
   switch (mood) {
     case 'happy':
       return <Smile {...props} />;
+    case 'excited':
+      return <Sparkles {...props} />;
     case 'sad':
       return <Frown {...props} />;
+    case 'anxious':
+      return <Heart {...props} />;
     case 'neutral':
       return <Meh {...props} />;
     default:

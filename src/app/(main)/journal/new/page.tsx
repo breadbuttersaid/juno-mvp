@@ -16,32 +16,23 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Loader2, Sparkles, Wand2, Smile, Frown, Meh } from 'lucide-react';
+import { Loader2, Smile, Frown, Meh, Sparkles, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { JournalEntry } from '@/lib/types';
-import { generateMoodBasedPrompt } from '@/ai/flows/mood-based-prompts';
 import { addJournalEntry } from '@/lib/actions/journal';
 import { useToast } from '@/hooks/use-toast';
 
 const moods = [
   { value: 'happy', icon: Smile, label: 'Happy' },
-  { value: 'sad', icon: Frown, label: 'Sad' },
+  { value: 'excited', icon: Sparkles, label: 'Excited' },
   { value: 'neutral', icon: Meh, label: 'Neutral' },
+  { value: 'sad', icon: Frown, label: 'Sad' },
+  { value: 'anxious', icon: Heart, label: 'Anxious' },
 ] as const;
 
-type Mood = (typeof moods)[number]['value'];
-
 const formSchema = z.object({
-  mood: z.enum(['happy', 'sad', 'neutral']),
-  content: z.string().min(10, {
-    message: 'Journal entry must be at least 10 characters.',
+  mood: z.enum(['happy', 'excited', 'neutral', 'sad', 'anxious']),
+  content: z.string().min(1, {
+    message: 'Journal entry cannot be empty.',
   }),
 });
 
@@ -49,8 +40,6 @@ export default function NewJournalEntryPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const [isPromptLoading, setIsPromptLoading] = useTransition();
-  const [affirmation, setAffirmation] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,31 +49,17 @@ export default function NewJournalEntryPage() {
     },
   });
 
-  async function handleGeneratePrompt() {
-    setIsPromptLoading(async () => {
-      try {
-        const { prompt } = await generateMoodBasedPrompt({ mood: form.getValues('mood') });
-        form.setValue('content', form.getValues('content') + prompt);
-      } catch (error) {
-        console.error('Failed to generate prompt', error);
-        toast({
-          title: 'Error',
-          description: 'Could not generate a prompt. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    });
-  }
-
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
       try {
-        const newEntry = await addJournalEntry(values);
-        if (newEntry?.ai_affirmation) {
-          setAffirmation(newEntry.ai_affirmation);
-        } else {
-          router.push('/journal');
-        }
+        await addJournalEntry(values);
+        toast({
+            title: "Entry Saved!",
+            description: "Your new journal entry has been saved successfully.",
+        });
+        // Reset form for next entry
+        form.reset({ mood: values.mood, content: '' }); 
+        router.refresh();
       } catch (error) {
         console.error('Failed to save entry', error);
         toast({
@@ -101,7 +76,7 @@ export default function NewJournalEntryPage() {
       <Card>
         <CardHeader>
           <CardTitle className="font-headline text-3xl">New Journal Entry</CardTitle>
-          <CardDescription>How are you feeling today? Capture your thoughts.</CardDescription>
+          <CardDescription>Capture your thoughts as they happen throughout the day.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -113,7 +88,7 @@ export default function NewJournalEntryPage() {
                   <FormItem>
                     <FormLabel>Select your mood</FormLabel>
                     <FormControl>
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex flex-wrap gap-2 pt-2">
                         {moods.map((mood) => (
                           <Button
                             key={mood.value}
@@ -139,19 +114,9 @@ export default function NewJournalEntryPage() {
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex justify-between items-center">
-                      <FormLabel>Your entry</FormLabel>
-                      <Button type="button" variant="ghost" size="sm" onClick={handleGeneratePrompt} disabled={isPromptLoading}>
-                        {isPromptLoading ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Wand2 className="mr-2 h-4 w-4" />
-                        )}
-                        Generate Prompt
-                      </Button>
-                    </div>
+                    <FormLabel>Your entry</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Tell me about your day..." rows={10} {...field} />
+                      <Textarea placeholder="What's on your mind?" rows={8} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,20 +130,6 @@ export default function NewJournalEntryPage() {
           </Form>
         </CardContent>
       </Card>
-
-      <Dialog open={!!affirmation} onOpenChange={() => { setAffirmation(null); router.push('/journal'); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-headline text-2xl">
-              <Sparkles className="h-6 w-6 text-primary" />
-              A Thought For You
-            </DialogTitle>
-            <DialogDescription className="pt-4 text-foreground/80 text-base">
-              {affirmation}
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
