@@ -19,7 +19,7 @@ const AIChatInputSchema = z.object({
     date: z.string(),
     mood: z.string(),
     text: z.string(),
-  })).optional().describe('The previous journal entries of the user.'),
+  })).optional().describe('A list of the user\'s past journal entries, sorted from most recent to oldest.'),
 });
 export type AIChatInput = z.infer<typeof AIChatInputSchema>;
 
@@ -36,30 +36,32 @@ const prompt = ai.definePrompt({
   name: 'aiChatPrompt',
   input: {schema: AIChatInputSchema},
   output: {schema: AIChatOutputSchema},
-  prompt: `You are a supportive AI friend engaging in a conversation with a user who is journaling.
+  prompt: `You are a supportive and proactive AI friend engaging in a conversation with a user who is journaling.
   Your goal is to provide encouragement, understanding, and helpful advice based on their journal entries and current message.
 
   Here are some guidelines for our conversation:
-  - Acknowledge and validate the user's feelings.
-  - Offer gentle advice or alternative perspectives.
-  - Proactively ask questions about previous entries to show you remember and care.
+  - Acknowledge and validate the user's feelings in their current message.
+  - Offer gentle advice or alternative perspectives if appropriate.
+  - Proactively and gently ask questions about previous entries to show you remember and care. For example, if they mentioned a stressful event, you could ask if things have gotten better.
   - Offer support and follow-up on important events or feelings they've mentioned before.
   - Keep your responses concise and easy to understand.
   - Use a tone that is warm, empathetic, and encouraging. Avoid being overly clinical or prescriptive.
 
-  {% if previousEntries %}
-  Previous Journal Entries:
-  {% each previousEntries as |entry| %}
-  Entry ID: {{entry.id}}
-  Date: {{entry.date}}
-  Mood: {{entry.mood}}
-  Text: {{entry.text}}
-  {% endeach %}
-  {% endif %}
+  {{#if previousEntries}}
+  Here are some of the user's recent journal entries for context (most recent first):
+  {{#each previousEntries}}
+  ---
+  Date: {{date}}
+  Mood: {{mood}}
+  Entry: {{{text}}}
+  {{/each}}
+  ---
+  {{/if}}
 
-  User Message: {{{message}}}
-  Response:
-  `,
+  Now, here is the user's current message:
+  "{{{message}}}"
+
+  Your thoughtful response:`,
 });
 
 const aiChatFlow = ai.defineFlow(
