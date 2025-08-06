@@ -42,7 +42,6 @@ export default function EditJournalEntryPage({ params }: { params: { id: string 
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(true);
-  const entryId = params.id;
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,6 +52,9 @@ export default function EditJournalEntryPage({ params }: { params: { id: string 
   });
 
   useEffect(() => {
+    const entryId = params.id;
+    if (!entryId) return;
+
     const fetchEntry = async () => {
       setIsLoading(true);
       const entry = await getJournalEntry(entryId);
@@ -72,12 +74,12 @@ export default function EditJournalEntryPage({ params }: { params: { id: string 
       setIsLoading(false);
     };
     fetchEntry();
-  }, [entryId, form, router, toast]);
+  }, [params.id, form, router, toast]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
       try {
-        await updateJournalEntry(entryId, values);
+        await updateJournalEntry(params.id, values);
         toast({
           title: 'Success',
           description: 'Your journal entry has been updated.',
