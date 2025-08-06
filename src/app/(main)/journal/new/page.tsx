@@ -53,13 +53,9 @@ export default function NewJournalEntryPage() {
     startTransition(async () => {
       try {
         await addJournalEntry(values);
-        toast({
-            title: "Entry Saved!",
-            description: "Your new journal entry has been saved successfully.",
-        });
-        // Reset form for next entry
+        // Reset form for next entry, keeping the selected mood.
         form.reset({ mood: values.mood, content: '' }); 
-        router.refresh();
+        router.refresh(); // Refresh router to reflect new entry in other components
       } catch (error) {
         console.error('Failed to save entry', error);
         toast({
@@ -86,20 +82,18 @@ export default function NewJournalEntryPage() {
                 name="mood"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Select your mood</FormLabel>
+                    <FormLabel>How are you feeling right now?</FormLabel>
                     <FormControl>
                       <div className="flex flex-wrap gap-2 pt-2">
                         {moods.map((mood) => (
-                          <Button
+                           <Button
                             key={mood.value}
                             type="button"
                             variant={field.value === mood.value ? 'default' : 'outline'}
                             onClick={() => field.onChange(mood.value)}
-                            className={cn('flex-1 justify-center gap-2', {
-                              'bg-primary/20 text-primary-foreground': field.value === mood.value
-                            })}
+                            className="flex-1 min-w-[100px]"
                           >
-                            <mood.icon className="h-5 w-5" />
+                            <mood.icon className="mr-2 h-5 w-5" />
                             <span>{mood.label}</span>
                           </Button>
                         ))}
@@ -114,9 +108,12 @@ export default function NewJournalEntryPage() {
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Your entry</FormLabel>
+                    <FormLabel>What's on your mind?</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="What's on your mind?" rows={8} {...field} />
+                      <Textarea 
+                        placeholder="Let it all out... the good, the bad, and everything in between." 
+                        rows={8} 
+                        {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
