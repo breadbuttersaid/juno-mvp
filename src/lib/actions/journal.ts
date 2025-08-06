@@ -6,6 +6,7 @@ import { generateAffirmation } from '@/ai/flows/ai-affirmations';
 import { summarizeEntries } from '@/ai/flows/ai-summaries';
 import { generateSuggestions } from '@/ai/flows/activity-suggestions';
 import { generateWeeklySummary as genWeeklySummary } from '@/ai/flows/weekly-summary';
+import { generateMoodBasedPrompt } from '@/ai/flows/mood-based-prompts';
 import type { JournalEntry, ActivitySuggestion } from '../types';
 import { subDays, isAfter, formatISO } from 'date-fns';
 
@@ -217,4 +218,19 @@ export async function generateWeeklySummary(): Promise<{ summary?: string, error
         console.error("AI weekly summary generation failed:", e);
         return { error: 'Failed to generate weekly summary from AI.' };
     }
+}
+
+
+const moodPromptSchema = z.object({
+  mood: z.enum(['happy', 'excited', 'neutral', 'sad', 'anxious', 'grateful', 'stressed', 'tired', 'calm', 'inspired']),
+});
+
+export async function generateMoodBasedPromptAction(values: z.infer<typeof moodPromptSchema>): Promise<{ prompt?: string, error?: string}> {
+  try {
+    const result = await generateMoodBasedPrompt({ mood: values.mood });
+    return { prompt: result.prompt };
+  } catch (e) {
+    console.error("Mood prompt generation failed:", e);
+    return { error: 'Failed to generate prompt from AI.' };
+  }
 }

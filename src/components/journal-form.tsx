@@ -15,10 +15,12 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Smile, Frown, Meh, Sparkles, Heart, HandHeart, Zap, BatteryLow, Feather, Lightbulb } from 'lucide-react';
-import { addJournalEntry, updateJournalEntry } from '@/lib/actions/journal';
+import { Loader2, Smile, Frown, Meh, Sparkles, Heart, HandHeart, Zap, BatteryLow, Feather, Lightbulb, WandSparkles } from 'lucide-react';
+import { addJournalEntry, updateJournalEntry, generateMoodBasedPromptAction } from '@/lib/actions/journal';
 import { useToast } from '@/hooks/use-toast';
 import type { JournalEntry } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const moods = [
   { value: 'happy', icon: Smile, label: 'Happy' },
@@ -51,6 +53,8 @@ type JournalFormProps = {
 export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const [isPromptLoading, setIsPromptLoading] = useState(false);
+  const [prompt, setPrompt] = useState<string | null>(null);
   const isEditing = !!entry;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -61,12 +65,36 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
     },
   });
   
+  const selectedMood = form.watch('mood');
+
   useEffect(() => {
     form.reset({
       mood: entry?.mood || 'neutral',
       content: entry?.content || '',
     });
+    setPrompt(null);
   }, [entry, form]);
+  
+  useEffect(() => {
+    if (isEditing) return; // Don't fetch prompts when editing
+
+    const getPrompt = async () => {
+      setIsPromptLoading(true);
+      setPrompt(null);
+      try {
+        const result = await generateMoodBasedPromptAction({ mood: selectedMood });
+        if (result.prompt) {
+          setPrompt(result.prompt);
+        }
+      } catch (error) {
+        console.error("Failed to get prompt", error);
+      } finally {
+        setIsPromptLoading(false);
+      }
+    };
+
+    getPrompt();
+  }, [selectedMood, isEditing]);
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -96,6 +124,13 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
       }
     });
   }
+
+  const handleInsertPrompt = () => {
+    if (prompt) {
+      const currentContent = form.getValues('content');
+      form.setValue('content', currentContent ? `${currentContent}\n\n${prompt}` : prompt);
+    }
+  };
 
   return (
     <>
@@ -149,6 +184,36 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
             </FormItem>
             )}
         />
+
+        <AnimatePresence>
+          {!isEditing && (isPromptLoading || prompt) && (
+             <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="text-sm p-3 bg-secondary/50 border border-secondary rounded-lg"
+              >
+              {isPromptLoading ? (
+                 <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Generating a prompt for you...</span>
+                 </div>
+              ) : prompt ? (
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                      <p className="font-medium flex items-center gap-2 mb-1 text-primary">
+                          <WandSparkles className="h-4 w-4" />
+                          AI Suggestion
+                      </p>
+                      <p className="text-muted-foreground">{prompt}</p>
+                  </div>
+                  <Button type="button" size="sm" variant="outline" onClick={handleInsertPrompt}>Insert</Button>
+                </div>
+              ) : null}
+             </motion.div>
+          )}
+        </AnimatePresence>
+
         <DialogFooter>
             <Button variant="outline" type="button" onClick={onCancel} disabled={isPending}>
                 Cancel

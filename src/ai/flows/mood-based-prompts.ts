@@ -13,7 +13,7 @@ import {z} from 'genkit';
 
 const MoodBasedPromptInputSchema = z.object({
   mood: z
-    .enum(['happy', 'sad', 'neutral'])
+    .enum(['happy', 'sad', 'neutral', 'excited', 'anxious', 'grateful', 'stressed', 'tired', 'calm', 'inspired'])
     .describe('The current mood of the user.'),
 });
 export type MoodBasedPromptInput = z.infer<typeof MoodBasedPromptInputSchema>;
@@ -37,7 +37,7 @@ const prompt = ai.definePrompt({
 
 Mood: {{{mood}}}
 
-Prompt:`,
+Journal Prompt (be creative and encouraging):`,
 });
 
 const moodBasedPromptFlow = ai.defineFlow(
