@@ -36,7 +36,7 @@ const mockDatabase: JournalEntry[] = [
 let idCounter = 4;
 
 const formSchema = z.object({
-  mood: z.enum(['happy', 'excited', 'neutral', 'sad', 'anxious']),
+  mood: z.enum(['happy', 'excited', 'neutral', 'sad', 'anxious', 'grateful', 'stressed', 'tired', 'calm', 'inspired']),
   content: z.string().min(1, {
     message: 'Journal entry cannot be empty.',
   }),

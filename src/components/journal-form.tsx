@@ -14,9 +14,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Loader2, Smile, Frown, Meh, Sparkles, Heart } from 'lucide-react';
+import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Loader2, Smile, Frown, Meh, Sparkles, Heart, HandHeart, Zap, BatteryLow, Feather, Lightbulb } from 'lucide-react';
 import { addJournalEntry, updateJournalEntry } from '@/lib/actions/journal';
 import { useToast } from '@/hooks/use-toast';
 import type { JournalEntry } from '@/lib/types';
@@ -27,10 +26,17 @@ const moods = [
   { value: 'neutral', icon: Meh, label: 'Neutral' },
   { value: 'sad', icon: Frown, label: 'Sad' },
   { value: 'anxious', icon: Heart, label: 'Anxious' },
+  { value: 'grateful', icon: HandHeart, label: 'Grateful' },
+  { value: 'stressed', icon: Zap, label: 'Stressed' },
+  { value: 'tired', icon: BatteryLow, label: 'Tired' },
+  { value: 'calm', icon: Feather, label: 'Calm' },
+  { value: 'inspired', icon: Lightbulb, label: 'Inspired' },
 ] as const;
 
+type MoodValue = typeof moods[number]['value'];
+
 const formSchema = z.object({
-  mood: z.enum(['happy', 'excited', 'neutral', 'sad', 'anxious']),
+  mood: z.enum(moods.map(m => m.value) as [MoodValue, ...MoodValue[]]),
   content: z.string().min(1, {
     message: 'Journal entry cannot be empty.',
   }),
@@ -115,7 +121,7 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
                         type="button"
                         variant={field.value === mood.value ? 'default' : 'outline'}
                         onClick={() => field.onChange(mood.value)}
-                        className="flex-1 min-w-[100px]"
+                        className="flex-grow sm:flex-grow-0"
                     >
                         <mood.icon className="mr-2 h-5 w-5" />
                         <span>{mood.label}</span>

@@ -1,7 +1,7 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, PlusCircle, Smile, Frown, Meh, Sparkles, Heart } from 'lucide-react';
+import { Trophy, PlusCircle } from 'lucide-react';
 import type { JournalEntry } from '@/lib/types';
 import { format, subDays, parseISO } from 'date-fns';
 import { getJournalEntries } from '@/lib/actions/journal';
@@ -52,6 +52,11 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
     neutral: 3,
     sad: 2,
     anxious: 1,
+    grateful: 5,
+    stressed: 1,
+    tired: 2,
+    calm: 4,
+    inspired: 5,
     none: 0
   };
 
@@ -72,6 +77,11 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
     neutral: { label: "Neutral", color: "hsl(var(--chart-2))" },
     sad: { label: "Sad", color: "hsl(var(--chart-3))" },
     anxious: { label: "Anxious", color: "hsl(var(--chart-4))" },
+    grateful: { label: "Grateful", color: "hsl(var(--chart-5))" },
+    stressed: { label: "Stressed", color: "hsl(var(--chart-4))" },
+    tired: { label: "Tired", color: "hsl(var(--chart-2))" },
+    calm: { label: "Calm", color: "hsl(var(--chart-1))" },
+    inspired: { label: "Inspired", color: "hsl(var(--chart-5))" },
     none: { label: "No Entry", color: "hsl(var(--muted))" }
   } satisfies ChartConfig;
   
@@ -212,7 +222,7 @@ export default function DashboardPage() {
                  <h2 className="text-2xl font-bold text-foreground">Ready to write?</h2>
                  <p className="text-muted-foreground mb-4">Create a new entry to capture your thoughts.</p>
                 <Button asChild size="lg">
-                <Link href="/journal/new">
+                <Link href="/journal">
                     <PlusCircle className="mr-2 h-5 w-5" />
                     New Journal Entry
                 </Link>

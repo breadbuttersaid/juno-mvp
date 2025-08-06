@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Smile, Frown, Meh, Sparkles, Heart } from 'lucide-react';
+import { PlusCircle, Smile, Frown, Meh, Sparkles, Heart, HandHeart, Zap, BatteryLow, Feather, Lightbulb } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import type { JournalEntry } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,16 @@ function MoodIcon({ mood, className }: { mood: JournalEntry['mood']; className?:
       return <Heart {...props} />;
     case 'neutral':
       return <Meh {...props} />;
+    case 'grateful':
+      return <HandHeart {...props} />;
+    case 'stressed':
+      return <Zap {...props} />;
+    case 'tired':
+      return <BatteryLow {...props} />;
+    case 'calm':
+      return <Feather {...props} />;
+    case 'inspired':
+      return <Lightbulb {...props} />;
     default:
       return null;
   }
