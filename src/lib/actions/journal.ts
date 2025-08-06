@@ -5,8 +5,6 @@ import { z } from 'zod';
 import { generateAffirmation } from '@/ai/flows/ai-affirmations';
 import { summarizeEntries } from '@/ai/flows/ai-summaries';
 import type { JournalEntry } from '../types';
-import { redirect } from 'next/navigation';
-
 
 // This is a mock database. In a real application, you would use a proper database.
 const mockDatabase: JournalEntry[] = [
@@ -69,7 +67,6 @@ export async function addJournalEntry(values: z.infer<typeof formSchema>) {
   revalidatePath('/journal');
   revalidatePath('/dashboard');
   revalidatePath('/insights');
-  redirect('/journal');
 }
 
 
@@ -95,6 +92,8 @@ export async function updateJournalEntry(id: string, values: z.infer<typeof form
     ...originalEntry,
     content,
     mood,
+    // Preserve other fields
+    updated_at: new Date().toISOString(),
   };
   
   // Optionally re-generate affirmation if content has changed
@@ -107,7 +106,6 @@ export async function updateJournalEntry(id: string, values: z.infer<typeof form
   revalidatePath('/journal');
   revalidatePath('/dashboard');
   revalidatePath('/insights');
-  redirect('/journal');
 }
 
 export async function deleteJournalEntry(id: string) {

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Pencil, Trash2, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -23,9 +22,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { deleteJournalEntry } from '@/lib/actions/journal';
 import { useToast } from '@/hooks/use-toast';
+import type { JournalEntry } from '@/lib/types';
 
-export function JournalEntryActions({ entryId }: { entryId: string }) {
-  const router = useRouter();
+export function JournalEntryActions({ entry, onEdit }: { entry: JournalEntry, onEdit: (entry: JournalEntry) => void }) {
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -33,7 +32,7 @@ export function JournalEntryActions({ entryId }: { entryId: string }) {
   const handleDelete = () => {
     startTransition(async () => {
       try {
-        await deleteJournalEntry(entryId);
+        await deleteJournalEntry(entry.id);
         toast({
           title: 'Success',
           description: 'Journal entry has been deleted.',
@@ -60,7 +59,7 @@ export function JournalEntryActions({ entryId }: { entryId: string }) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => router.push(`/journal/${entryId}/edit`)}>
+          <DropdownMenuItem onClick={() => onEdit(entry)}>
             <Pencil className="mr-2 h-4 w-4" />
             <span>Edit</span>
           </DropdownMenuItem>
