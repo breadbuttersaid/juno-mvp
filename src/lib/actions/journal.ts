@@ -7,6 +7,7 @@ import { summarizeEntries } from '@/ai/flows/ai-summaries';
 import { generateSuggestions } from '@/ai/flows/activity-suggestions';
 import { generateWeeklySummary as genWeeklySummary } from '@/ai/flows/weekly-summary';
 import { generateMoodBasedPrompt } from '@/ai/flows/mood-based-prompts';
+import { generateWritingPrompts, GenerateWritingPromptsInputSchema } from '@/ai/flows/writing-prompts';
 import type { JournalEntry, ActivitySuggestion } from '../types';
 import { subDays, isAfter, formatISO } from 'date-fns';
 
@@ -232,5 +233,15 @@ export async function generateMoodBasedPromptAction(values: z.infer<typeof moodP
   } catch (e) {
     console.error("Mood prompt generation failed:", e);
     return { error: 'Failed to generate prompt from AI.' };
+  }
+}
+
+export async function generateWritingPromptsAction(values: z.infer<typeof GenerateWritingPromptsInputSchema>): Promise<{ prompts?: string[], error?: string}> {
+  try {
+    const result = await generateWritingPrompts({ entrySoFar: values.entrySoFar });
+    return { prompts: result.prompts };
+  } catch (e) {
+    console.error("Writing prompt generation failed:", e);
+    return { error: 'Failed to generate prompts from AI.' };
   }
 }

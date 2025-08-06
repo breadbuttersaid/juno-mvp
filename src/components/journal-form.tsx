@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useCallback } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -16,11 +16,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, Smile, Frown, Meh, Sparkles, Heart, HandHeart, Zap, BatteryLow, Feather, Lightbulb, WandSparkles } from 'lucide-react';
-import { addJournalEntry, updateJournalEntry, generateMoodBasedPromptAction } from '@/lib/actions/journal';
+import { addJournalEntry, updateJournalEntry, generateWritingPromptsAction } from '@/lib/actions/journal';
 import { useToast } from '@/hooks/use-toast';
 import type { JournalEntry } from '@/lib/types';
-import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useDebounce } from '@/hooks/use-debounce';
 
 const moods = [
   { value: 'happy', icon: Smile, label: 'Happy' },
@@ -54,7 +54,7 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isPromptLoading, setIsPromptLoading] = useState(false);
-  const [prompt, setPrompt] = useState<string | null>(null);
+  const [prompts, setPrompts] = useState<string[]>([]);
   const isEditing = !!entry;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -65,36 +65,40 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
     },
   });
   
-  const selectedMood = form.watch('mood');
+  const contentValue = form.watch('content');
+  const debouncedContent = useDebounce(contentValue, 1500);
 
   useEffect(() => {
     form.reset({
       mood: entry?.mood || 'neutral',
       content: entry?.content || '',
     });
-    setPrompt(null);
+    setPrompts([]);
   }, [entry, form]);
   
-  useEffect(() => {
-    if (isEditing) return; // Don't fetch prompts when editing
-
-    const getPrompt = async () => {
-      setIsPromptLoading(true);
-      setPrompt(null);
-      try {
-        const result = await generateMoodBasedPromptAction({ mood: selectedMood });
-        if (result.prompt) {
-          setPrompt(result.prompt);
-        }
-      } catch (error) {
-        console.error("Failed to get prompt", error);
-      } finally {
-        setIsPromptLoading(false);
+  const getPrompts = useCallback(async (text: string) => {
+    if (isEditing || text.trim().length < 15) {
+      setPrompts([]);
+      return;
+    }
+    
+    setIsPromptLoading(true);
+    try {
+      const result = await generateWritingPromptsAction({ entrySoFar: text });
+      if (result.prompts) {
+        setPrompts(result.prompts);
       }
-    };
+    } catch (error) {
+      console.error("Failed to get prompts", error);
+      setPrompts([]); // Clear prompts on error
+    } finally {
+      setIsPromptLoading(false);
+    }
+  }, [isEditing]);
 
-    getPrompt();
-  }, [selectedMood, isEditing]);
+  useEffect(() => {
+    getPrompts(debouncedContent);
+  }, [debouncedContent, getPrompts]);
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -125,11 +129,13 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
     });
   }
 
-  const handleInsertPrompt = () => {
-    if (prompt) {
+  const handleInsertPrompt = (promptText: string) => {
       const currentContent = form.getValues('content');
-      form.setValue('content', currentContent ? `${currentContent}\n\n${prompt}` : prompt);
-    }
+      // Adds the prompt with a new line, ensuring there's a space if needed.
+      const newContent = currentContent.trim() ? `${currentContent.trim()}\n\n${promptText}` : promptText;
+      form.setValue('content', newContent);
+      form.setFocus('content');
+      setPrompts([]); // Hide prompts after one is used
   };
 
   return (
@@ -186,30 +192,39 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
         />
 
         <AnimatePresence>
-          {!isEditing && (isPromptLoading || prompt) && (
+          {!isEditing && (isPromptLoading || prompts.length > 0) && (
              <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="text-sm p-3 bg-secondary/50 border border-secondary rounded-lg"
+                exit={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-3 pt-2"
               >
-              {isPromptLoading ? (
-                 <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Generating a prompt for you...</span>
-                 </div>
-              ) : prompt ? (
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                      <p className="font-medium flex items-center gap-2 mb-1 text-primary">
-                          <WandSparkles className="h-4 w-4" />
-                          AI Suggestion
-                      </p>
-                      <p className="text-muted-foreground">{prompt}</p>
-                  </div>
-                  <Button type="button" size="sm" variant="outline" onClick={handleInsertPrompt}>Insert</Button>
-                </div>
-              ) : null}
+                <p className="text-sm font-medium flex items-center gap-2 text-primary">
+                    <WandSparkles className="h-4 w-4" />
+                    AI Suggestions
+                </p>
+                {isPromptLoading ? (
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Thinking...</span>
+                    </div>
+                ) : (
+                    <div className="flex flex-wrap gap-2">
+                        {prompts.map((prompt, index) => (
+                            <Button 
+                                key={index} 
+                                type="button" 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleInsertPrompt(prompt)}
+                                className="text-xs h-auto py-1 px-2.5"
+                            >
+                                {prompt}
+                            </Button>
+                        ))}
+                    </div>
+                )}
              </motion.div>
           )}
         </AnimatePresence>
