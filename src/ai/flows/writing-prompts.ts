@@ -4,22 +4,20 @@
  * @fileOverview Generates contextual writing prompts based on what the user has already typed in their journal entry.
  * 
  * - generateWritingPrompts - A function that generates contextual prompts.
- * - GenerateWritingPromptsInput - The input type for the function.
- * - GenerateWritingPromptsOutput - The return type for the function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const GenerateWritingPromptsInputSchema = z.object({
+const GenerateWritingPromptsInputSchema = z.object({
   entrySoFar: z.string().describe('The portion of the journal entry the user has written so far.'),
 });
-export type GenerateWritingPromptsInput = z.infer<typeof GenerateWritingPromptsInputSchema>;
+type GenerateWritingPromptsInput = z.infer<typeof GenerateWritingPromptsInputSchema>;
 
-export const GenerateWritingPromptsOutputSchema = z.object({
+const GenerateWritingPromptsOutputSchema = z.object({
   prompts: z.array(z.string()).describe('An array of 2-3 short, relevant follow-up questions or prompts to help the user continue writing.'),
 });
-export type GenerateWritingPromptsOutput = z.infer<typeof GenerateWritingPromptsOutputSchema>;
+type GenerateWritingPromptsOutput = z.infer<typeof GenerateWritingPromptsOutputSchema>;
 
 export async function generateWritingPrompts(input: GenerateWritingPromptsInput): Promise<GenerateWritingPromptsOutput> {
   return generateWritingPromptsFlow(input);
