@@ -53,9 +53,11 @@ export default function NewJournalEntryPage() {
     startTransition(async () => {
       try {
         await addJournalEntry(values);
-        // Reset form for next entry, keeping the selected mood.
-        form.reset({ mood: values.mood, content: '' }); 
-        router.refresh(); // Refresh router to reflect new entry in other components
+        toast({
+          title: 'Success',
+          description: 'Your journal entry has been saved.',
+        });
+        router.push('/journal');
       } catch (error) {
         console.error('Failed to save entry', error);
         toast({
