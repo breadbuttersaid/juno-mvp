@@ -5,7 +5,10 @@ import { z } from 'zod';
 import { generateAffirmation } from '@/ai/flows/ai-affirmations';
 import { summarizeEntries } from '@/ai/flows/ai-summaries';
 import { generateSuggestions } from '@/ai/flows/activity-suggestions';
+import { generateWeeklySummary as genWeeklySummary } from '@/ai/flows/weekly-summary';
 import type { JournalEntry, ActivitySuggestion } from '../types';
+import { subDays, isAfter } from 'date-fns';
+
 
 // This is a mock database. In a real application, you would use a proper database.
 const mockDatabase: JournalEntry[] = [
@@ -71,6 +74,7 @@ export async function addJournalEntry(values: z.infer<typeof formSchema>) {
   revalidatePath('/journal');
   revalidatePath('/dashboard');
   revalidatePath('/insights');
+  revalidatePath('/recap');
 }
 
 
@@ -113,6 +117,7 @@ export async function updateJournalEntry(id: string, values: z.infer<typeof form
   revalidatePath('/journal');
   revalidatePath('/dashboard');
   revalidatePath('/insights');
+  revalidatePath('/recap');
 }
 
 export async function deleteJournalEntry(id: string) {
@@ -129,6 +134,7 @@ export async function deleteJournalEntry(id: string) {
   revalidatePath('/journal');
   revalidatePath('/dashboard');
   revalidatePath('/insights');
+  revalidatePath('/recap');
 }
 
 let cachedSummary: { timestamp: number, summary: string } | null = null;
@@ -186,5 +192,29 @@ export async function generateActivitySuggestions(): Promise<{ suggestions?: Act
     } catch (e) {
         console.error("AI suggestion generation failed:", e);
         return { error: 'Failed to generate suggestions from AI.' };
+    }
+}
+
+export async function generateWeeklySummary(): Promise<{ summary?: string, error?: string }> {
+    const allEntries = await getJournalEntries();
+    const oneWeekAgo = subDays(new Date(), 7);
+
+    const recentEntries = allEntries.filter(entry => 
+        isAfter(new Date(entry.created_at), oneWeekAgo)
+    );
+
+    if (recentEntries.length < 3) {
+        return { error: 'You need at least 3 journal entries in the last week to generate a summary.' };
+    }
+
+    try {
+        const result = await genWeeklySummary({
+            moods: recentEntries.map(e => e.mood),
+            entries: recentEntries.map(e => e.content),
+        });
+        return { summary: result.summary };
+    } catch (e) {
+        console.error("AI weekly summary generation failed:", e);
+        return { error: 'Failed to generate weekly summary from AI.' };
     }
 }

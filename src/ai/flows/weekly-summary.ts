@@ -13,7 +13,7 @@ import {z} from 'genkit';
 const GenerateWeeklySummaryInputSchema = z.object({
   moods: z
     .array(z.string())
-    .describe('An array of mood emojis tracked daily during the week.'),
+    .describe("An array of mood emojis tracked daily during the week."),
   entries: z
     .array(z.string())
     .describe('An array of journal entries written during the week.'),
@@ -26,7 +26,7 @@ const GenerateWeeklySummaryOutputSchema = z.object({
   summary: z
     .string()
     .describe(
-      'A summary of the user\'s emotions and thoughts throughout the week, highlighting overall sentiment trends.'
+      "A summary of the user\'s emotions and thoughts throughout the week, highlighting overall sentiment trends."
     ),
 });
 export type GenerateWeeklySummaryOutput = z.infer<

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, Bot, LayoutDashboard, FileDown, BarChart3 } from 'lucide-react';
+import { BookOpen, Bot, LayoutDashboard, FileDown, BarChart3, CalendarCheck2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +10,7 @@ const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/journal', label: 'Journal', icon: BookOpen },
   { href: '/insights', label: 'My Insights', icon: BarChart3 },
+  { href: '/recap', label: 'Weekly Recap', icon: CalendarCheck2 },
   { href: '/chat', label: 'AI Companion', icon: Bot },
   { href: '/export', label: 'Export', icon: FileDown },
 ];
