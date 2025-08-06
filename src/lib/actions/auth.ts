@@ -26,12 +26,13 @@ export async function login(formData: z.infer<typeof formSchema>) {
 
 export async function signup(formData: z.infer<typeof formSchema>) {
   const supabase = createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
   const { error } = await supabase.auth.signUp({
     email: formData.email,
     password: formData.password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      emailRedirectTo: `${siteUrl}/auth/callback`,
     },
   });
 
