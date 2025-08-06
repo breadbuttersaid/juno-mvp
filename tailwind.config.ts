@@ -19,8 +19,8 @@ const config = {
     },
     extend: {
       fontFamily: {
-        body: ['Alegreya', 'serif'],
-        headline: ['Alegreya', 'serif'],
+        body: ['"Inter"', 'sans-serif'],
+        headline: ['"Inter"', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -55,6 +55,11 @@ const config = {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+        },
+        chart: {
+          '1': 'hsl(217.2 91.2% 59.8%)', // primary
+          '2': 'hsl(217.2 32.6% 77.5%)', // lighter secondary
+          '3': 'hsl(0 63% 50%)', // destructive-ish
         },
       },
       borderRadius: {
