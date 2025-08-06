@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { generateAffirmation } from '@/ai/flows/ai-affirmations';
 import { summarizeEntries } from '@/ai/flows/ai-summaries';
 import type { JournalEntry } from '../types';
+import { redirect } from 'next/navigation';
+
 
 // This is a mock database. In a real application, you would use a proper database.
 const mockDatabase: JournalEntry[] = [
@@ -67,8 +69,7 @@ export async function addJournalEntry(values: z.infer<typeof formSchema>) {
   revalidatePath('/journal');
   revalidatePath('/dashboard');
   revalidatePath('/insights');
-
-  return newEntry;
+  redirect('/journal');
 }
 
 
@@ -77,8 +78,53 @@ export async function getJournalEntries(): Promise<JournalEntry[]> {
     return Promise.resolve([...mockDatabase].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
 }
 
+export async function getJournalEntry(id: string): Promise<JournalEntry | undefined> {
+  return Promise.resolve(mockDatabase.find(entry => entry.id === id));
+}
+
+export async function updateJournalEntry(id: string, values: z.infer<typeof formSchema>) {
+  const { content, mood } = values;
+  const entryIndex = mockDatabase.findIndex(entry => entry.id === id);
+
+  if (entryIndex === -1) {
+    throw new Error('Entry not found');
+  }
+
+  const originalEntry = mockDatabase[entryIndex];
+  mockDatabase[entryIndex] = {
+    ...originalEntry,
+    content,
+    mood,
+  };
+  
+  // Optionally re-generate affirmation if content has changed
+  if (originalEntry.content !== content) {
+    generateAffirmation({ journalEntry: content }).then(({ affirmation }) => {
+        mockDatabase[entryIndex].ai_affirmation = affirmation;
+    });
+  }
+
+  revalidatePath('/journal');
+  revalidatePath('/dashboard');
+  revalidatePath('/insights');
+  redirect('/journal');
+}
+
+export async function deleteJournalEntry(id: string) {
+  const entryIndex = mockDatabase.findIndex(entry => entry.id === id);
+  if (entryIndex > -1) {
+    mockDatabase.splice(entryIndex, 1);
+  } else {
+    throw new Error('Entry not found');
+  }
+  
+  revalidatePath('/journal');
+  revalidatePath('/dashboard');
+  revalidatePath('/insights');
+}
+
 let cachedSummary: { timestamp: number, summary: string } | null = null;
-let lastEntryCount = 0;
+let lastEntryCount = mockDatabase.length;
 
 
 export async function generateSummary(): Promise<{ summary?: string, error?: string }> {

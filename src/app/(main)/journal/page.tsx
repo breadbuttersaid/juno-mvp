@@ -6,6 +6,7 @@ import { format, parseISO } from 'date-fns';
 import type { JournalEntry } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { getJournalEntries } from '@/lib/actions/journal';
+import { JournalEntryActions } from '@/components/journal-entry-actions';
 
 function MoodIcon({ mood, className }: { mood: JournalEntry['mood']; className?: string }) {
   const props = { className: className || 'h-5 w-5' };
@@ -62,10 +63,13 @@ export default async function JournalPage() {
                       {format(parseISO(entry.created_at), 'eeee, p')}
                     </CardDescription>
                   </div>
-                   <Badge variant="secondary" className="capitalize flex items-center gap-1.5 py-1 px-2.5">
-                    <MoodIcon mood={entry.mood} className="h-4 w-4" />
-                    <span>{entry.mood}</span>
-                   </Badge>
+                   <div className="flex items-center gap-4">
+                     <Badge variant="secondary" className="capitalize flex items-center gap-1.5 py-1 px-2.5">
+                      <MoodIcon mood={entry.mood} className="h-4 w-4" />
+                      <span>{entry.mood}</span>
+                     </Badge>
+                     <JournalEntryActions entryId={entry.id} />
+                   </div>
                 </div>
               </CardHeader>
               <CardContent>
