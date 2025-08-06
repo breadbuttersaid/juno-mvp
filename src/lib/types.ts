@@ -11,10 +11,3 @@ export type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
 };
-
-// Supabase generates its own types, but we can define a user profile type if needed for our app logic.
-export type UserProfile = {
-  id: string;
-  email: string;
-  // any other profile fields
-};
