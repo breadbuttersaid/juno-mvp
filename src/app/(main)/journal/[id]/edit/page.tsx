@@ -42,6 +42,7 @@ export default function EditJournalEntryPage({ params }: { params: { id: string 
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(true);
+  const entryId = params.id;
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,7 +55,7 @@ export default function EditJournalEntryPage({ params }: { params: { id: string 
   useEffect(() => {
     const fetchEntry = async () => {
       setIsLoading(true);
-      const entry = await getJournalEntry(params.id);
+      const entry = await getJournalEntry(entryId);
       if (entry) {
         form.reset({
           mood: entry.mood,
@@ -71,16 +72,17 @@ export default function EditJournalEntryPage({ params }: { params: { id: string 
       setIsLoading(false);
     };
     fetchEntry();
-  }, [params.id, form, router, toast]);
+  }, [entryId, form, router, toast]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
       try {
-        await updateJournalEntry(params.id, values);
+        await updateJournalEntry(entryId, values);
         toast({
           title: 'Success',
           description: 'Your journal entry has been updated.',
         });
+        router.push('/journal');
       } catch (error) {
         console.error('Failed to update entry', error);
         toast({
