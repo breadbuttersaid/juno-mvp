@@ -1,27 +1,12 @@
-import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Trophy, CalendarHeart } from 'lucide-react';
 import type { JournalEntry } from '@/lib/types';
 import { generateWeeklySummary } from '@/ai/flows/weekly-summary';
 import { format, subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { getJournalEntries } from '@/lib/actions/journal';
 
 async function getJournalData() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return { entries: [], streak: 0 };
-
-  const { data: entries, error } = await supabase
-    .from('journal_entries')
-    .select('id, created_at, mood, content')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching entries:', error);
-    return { entries: [], streak: 0 };
-  }
-
+  const entries = await getJournalEntries();
   const streak = calculateStreak(entries as Pick<JournalEntry, 'created_at'>[]);
   return { entries: (entries as JournalEntry[]) || [], streak };
 }
@@ -109,13 +94,11 @@ async function WeeklySummary({ entries }: { entries: JournalEntry[] }) {
 
 export default async function DashboardPage() {
   const { entries, streak } = await getJournalData();
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-headline font-bold">
-        Welcome, {user?.email?.split('@')[0] || 'friend'}!
+        Welcome, friend!
       </h1>
       <p className="text-muted-foreground">
         Here's a look at your mindful journey.

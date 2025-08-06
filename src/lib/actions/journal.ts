@@ -1,11 +1,14 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { generateAffirmation } from '@/ai/flows/ai-affirmations';
 import { summarizeEntries } from '@/ai/flows/ai-summaries';
 import type { JournalEntry } from '../types';
+
+// This is a mock database. In a real application, you would use a proper database.
+const mockDatabase: JournalEntry[] = [];
+let idCounter = 1;
 
 const formSchema = z.object({
   mood: z.enum(['happy', 'sad', 'neutral']),
@@ -15,55 +18,30 @@ const formSchema = z.object({
 });
 
 export async function addJournalEntry(values: z.infer<typeof formSchema>) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error('Not authenticated');
-  }
-
   // 1. Generate Affirmation
   const { affirmation } = await generateAffirmation({ journalEntry: values.content });
 
-  // 2. Save entry to database
-  const { data, error } = await supabase
-    .from('journal_entries')
-    .insert({
-      user_id: user.id,
-      mood: values.mood,
-      content: values.content,
-      ai_affirmation: affirmation,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Supabase error:', error);
-    throw new Error('Failed to save journal entry.');
-  }
+  // 2. Save entry to mock database
+  const newEntry: JournalEntry = {
+    id: (idCounter++).toString(),
+    created_at: new Date().toISOString(),
+    user_id: '1', // Mock user ID
+    mood: values.mood,
+    content: values.content,
+    ai_affirmation: affirmation,
+  };
+  
+  mockDatabase.unshift(newEntry);
 
   revalidatePath('/journal');
   revalidatePath('/dashboard');
 
-  return data as JournalEntry;
+  return newEntry;
 }
 
 
 export async function getJournalEntries(): Promise<JournalEntry[]> {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
-
-    const { data, error } = await supabase
-        .from('journal_entries')
-        .select('*')
-        .eq('user_id', user.id);
-    
-    if (error) {
-        console.error('Error fetching entries for summary:', error);
-        return [];
-    }
-    return data || [];
+    return Promise.resolve(mockDatabase);
 }
 
 export async function generateSummary(): Promise<{ summary?: string, error?: string }> {

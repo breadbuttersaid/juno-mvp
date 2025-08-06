@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle, Smile, Frown, Meh } from 'lucide-react';
@@ -6,6 +5,7 @@ import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import type { JournalEntry } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { getJournalEntries } from '@/lib/actions/journal';
 
 function MoodIcon({ mood, className }: { mood: JournalEntry['mood']; className?: string }) {
   const props = { className: className || 'h-5 w-5' };
@@ -22,21 +22,7 @@ function MoodIcon({ mood, className }: { mood: JournalEntry['mood']; className?:
 }
 
 export default async function JournalPage() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  let entries: JournalEntry[] = [];
-  if (user) {
-    const { data, error } = await supabase
-      .from('journal_entries')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      entries = data;
-    }
-  }
+  const entries = await getJournalEntries();
 
   return (
     <div className="space-y-6">

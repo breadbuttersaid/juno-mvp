@@ -10,8 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { logout } from '@/lib/actions/auth';
-import { User, LogOut } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export function UserNav({ email }: { email?: string | null }) {
   const initial = email ? email.charAt(0).toUpperCase() : '?';
@@ -33,15 +32,6 @@ export function UserNav({ email }: { email?: string | null }) {
             {email && <p className="text-xs leading-none text-muted-foreground">{email}</p>}
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <form action={logout}>
-          <DropdownMenuItem asChild>
-            <button className="w-full">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </button>
-          </DropdownMenuItem>
-        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   );

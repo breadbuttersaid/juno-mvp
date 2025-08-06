@@ -1,25 +1,12 @@
-import { createClient } from '@/lib/supabase/server';
 import ExportClient from '@/components/export-client';
 import type { JournalEntry } from '@/lib/types';
 import { FileDown, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getJournalEntries } from '@/lib/actions/journal';
+
 
 export default async function ExportPage() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  let entries: JournalEntry[] = [];
-  if (user) {
-    const { data, error } = await supabase
-      .from('journal_entries')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true });
-
-    if (!error) {
-      entries = data;
-    }
-  }
+  const entries = await getJournalEntries();
 
   return (
     <div className="space-y-6">
