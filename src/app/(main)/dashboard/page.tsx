@@ -72,16 +72,16 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
 
   const chartConfig = {
     value: { label: "Mood" },
-    happy: { label: "Happy", color: "hsl(var(--chart-1))" },
-    excited: { label: "Excited", color: "hsl(var(--chart-5))" },
-    neutral: { label: "Neutral", color: "hsl(var(--chart-2))" },
-    sad: { label: "Sad", color: "hsl(var(--chart-3))" },
-    anxious: { label: "Anxious", color: "hsl(var(--chart-4))" },
-    grateful: { label: "Grateful", color: "hsl(var(--chart-5))" },
-    stressed: { label: "Stressed", color: "hsl(var(--chart-4))" },
-    tired: { label: "Tired", color: "hsl(var(--chart-2))" },
-    calm: { label: "Calm", color: "hsl(var(--chart-1))" },
-    inspired: { label: "Inspired", color: "hsl(var(--chart-5))" },
+    happy: { label: "Happy", color: "#22c55e" },
+    excited: { label: "Excited", color: "#f59e0b" },
+    neutral: { label: "Neutral", color: "#a1a1aa" },
+    sad: { label: "Sad", color: "#3b82f6" },
+    anxious: { label: "Anxious", color: "#a855f7" },
+    grateful: { label: "Grateful", color: "#ec4899" },
+    stressed: { label: "Stressed", color: "#ef4444" },
+    tired: { label: "Tired", color: "#6b7280" },
+    calm: { label: "Calm", color: "#14b8a6" },
+    inspired: { label: "Inspired", color: "#d946ef" },
     none: { label: "No Entry", color: "hsl(var(--muted))" }
   } satisfies ChartConfig;
   
@@ -122,7 +122,7 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
             />
             <Bar dataKey="value" radius={8}>
                 {data.map((d, i) => (
-                    <div key={i} style={{ '--color': chartConfig[d.mood as keyof typeof chartConfig]?.color }} />
+                  <div key={i} style={{ fill: chartConfig[d.mood as keyof typeof chartConfig]?.color }} />
                 ))}
             </Bar>
           </BarChart>
