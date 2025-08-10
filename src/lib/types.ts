@@ -17,3 +17,9 @@ export type ActivitySuggestion = {
   title: string;
   description: string;
 };
+
+export type User = {
+    id: string;
+    email: string;
+    password?: string; // Should not be sent to client
+}

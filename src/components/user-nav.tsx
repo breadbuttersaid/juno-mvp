@@ -10,10 +10,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User } from 'lucide-react';
+import { logout } from '@/lib/actions/users';
+import { LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export function UserNav({ email }: { email?: string | null }) {
+  const router = useRouter();
   const initial = email ? email.charAt(0).toUpperCase() : '?';
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
 
   return (
     <DropdownMenu>
@@ -32,6 +40,11 @@ export function UserNav({ email }: { email?: string | null }) {
             {email && <p className="text-xs leading-none text-muted-foreground">{email}</p>}
           </div>
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
