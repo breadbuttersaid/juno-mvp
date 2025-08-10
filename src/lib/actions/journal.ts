@@ -10,13 +10,11 @@ import { generateMoodBasedPrompt } from '@/ai/flows/mood-based-prompts';
 import { generateWritingPrompts } from '@/ai/flows/writing-prompts';
 import type { JournalEntry, ActivitySuggestion } from '../types';
 import { subDays, isAfter, formatISO } from 'date-fns';
-import { getUserFromCookie } from '@/lib/auth';
-import { cookies } from 'next/headers';
 
 
 // This is a mock database. In a real application, you would use a proper database.
 const mockDatabase: { [userId: string]: JournalEntry[] } = {
-  '1': [ // Pre-populate for the default user
+  '1': [ // Pre-populate for a mock user
     {
       id: '1',
       created_at: formatISO(subDays(new Date(), 1)),
@@ -45,10 +43,9 @@ const mockDatabase: { [userId: string]: JournalEntry[] } = {
 };
 
 let idCounter = 4;
-// Caching needs to be per-user or disabled in a multi-user context.
-// For simplicity in this mock setup, we'll keep it simple, but this is a critical consideration.
-let cachedSummaries: { [userId: string]: { timestamp: number, summary: string, entryCount: number } } = {};
-let cachedSuggestions: { [userId: string]: { timestamp: number, suggestions: ActivitySuggestion[], entryCount: number } } = {};
+// Caching is simplified for this single-user mock setup.
+let cachedSummaries: { timestamp: number, summary: string, entryCount: number } | null = null;
+let cachedSuggestions: { timestamp: number, suggestions: ActivitySuggestion[], entryCount: number } | null = null;
 
 
 const formSchema = z.object({
@@ -58,15 +55,9 @@ const formSchema = z.object({
   }),
 });
 
-async function getUserId(): Promise<string | null> {
-    const user = await getUserFromCookie(cookies());
-    return user ? user.id : null;
-}
+const MOCK_USER_ID = '1';
 
 export async function addJournalEntry(values: z.infer<typeof formSchema>) {
-  const userId = await getUserId();
-  if (!userId) throw new Error('User not authenticated');
-
   const { content, mood } = values;
 
   const newEntry: JournalEntry = {
@@ -75,27 +66,21 @@ export async function addJournalEntry(values: z.infer<typeof formSchema>) {
     content,
     mood,
     ai_affirmation: null,
-    user_id: userId,
+    user_id: MOCK_USER_ID,
   };
   
   generateAffirmation({ journalEntry: content }).then(({ affirmation }) => {
-    const userEntries = mockDatabase[userId];
-    if (userEntries) {
-      const entry = userEntries.find(e => e.id === newEntry.id);
-      if (entry) {
-          entry.ai_affirmation = affirmation;
-      }
+    const entry = mockDatabase[MOCK_USER_ID].find(e => e.id === newEntry.id);
+    if (entry) {
+        entry.ai_affirmation = affirmation;
     }
   });
   
-  if (!mockDatabase[userId]) {
-    mockDatabase[userId] = [];
-  }
-  mockDatabase[userId].unshift(newEntry);
+  mockDatabase[MOCK_USER_ID].unshift(newEntry);
   
-  // Invalidate user-specific cache
-  delete cachedSummaries[userId];
-  delete cachedSuggestions[userId];
+  // Invalidate cache
+  cachedSummaries = null;
+  cachedSuggestions = null;
 
   revalidatePath('/journal');
   revalidatePath('/dashboard');
@@ -105,26 +90,17 @@ export async function addJournalEntry(values: z.infer<typeof formSchema>) {
 
 
 export async function getJournalEntries(): Promise<JournalEntry[]> {
-    const userId = await getUserId();
-    if (!userId) return [];
-    
-    const userEntries = mockDatabase[userId] || [];
+    const userEntries = mockDatabase[MOCK_USER_ID] || [];
     return [...userEntries].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
 export async function getJournalEntry(id: string): Promise<JournalEntry | undefined> {
-  const userId = await getUserId();
-  if (!userId) return undefined;
-  
-  return (mockDatabase[userId] || []).find(entry => entry.id === id);
+  return (mockDatabase[MOCK_USER_ID] || []).find(entry => entry.id === id);
 }
 
 export async function updateJournalEntry(id: string, values: z.infer<typeof formSchema>) {
-  const userId = await getUserId();
-  if (!userId) throw new Error('User not authenticated');
-
   const { content, mood } = values;
-  const userEntries = mockDatabase[userId] || [];
+  const userEntries = mockDatabase[MOCK_USER_ID] || [];
   const entryIndex = userEntries.findIndex(entry => entry.id === id);
 
   if (entryIndex === -1) {
@@ -132,7 +108,7 @@ export async function updateJournalEntry(id: string, values: z.infer<typeof form
   }
 
   const originalEntry = userEntries[entryIndex];
-  mockDatabase[userId][entryIndex] = {
+  mockDatabase[MOCK_USER_ID][entryIndex] = {
     ...originalEntry,
     content,
     mood,
@@ -141,12 +117,12 @@ export async function updateJournalEntry(id: string, values: z.infer<typeof form
   
   if (originalEntry.content !== content) {
     generateAffirmation({ journalEntry: content }).then(({ affirmation }) => {
-        mockDatabase[userId][entryIndex].ai_affirmation = affirmation;
+        mockDatabase[MOCK_USER_ID][entryIndex].ai_affirmation = affirmation;
     });
   }
 
-  delete cachedSummaries[userId];
-  delete cachedSuggestions[userId];
+  cachedSummaries = null;
+  cachedSuggestions = null;
 
   revalidatePath('/journal');
   revalidatePath('/dashboard');
@@ -155,20 +131,17 @@ export async function updateJournalEntry(id: string, values: z.infer<typeof form
 }
 
 export async function deleteJournalEntry(id: string) {
-  const userId = await getUserId();
-  if (!userId) throw new Error('User not authenticated');
-  
-  const userEntries = mockDatabase[userId] || [];
+  const userEntries = mockDatabase[MOCK_USER_ID] || [];
   const entryIndex = userEntries.findIndex(entry => entry.id === id);
 
   if (entryIndex > -1) {
-    mockDatabase[userId].splice(entryIndex, 1);
+    mockDatabase[MOCK_USER_ID].splice(entryIndex, 1);
   } else {
     throw new Error('Entry not found');
   }
   
-  delete cachedSummaries[userId];
-  delete cachedSuggestions[userId];
+  cachedSummaries = null;
+  cachedSuggestions = null;
 
   revalidatePath('/journal');
   revalidatePath('/dashboard');
@@ -177,15 +150,11 @@ export async function deleteJournalEntry(id: string) {
 }
 
 export async function generateSummary(): Promise<{ summary?: string, error?: string }> {
-    const userId = await getUserId();
-    if (!userId) return { error: 'User not authenticated' };
-
     const entries = await getJournalEntries();
-    const cached = cachedSummaries[userId];
     
-    if (cached && cached.entryCount === entries.length) {
-      if (Date.now() - cached.timestamp < 5 * 60 * 1000) { // 5-minute cache
-        return { summary: cached.summary };
+    if (cachedSummaries && cachedSummaries.entryCount === entries.length) {
+      if (Date.now() - cachedSummaries.timestamp < 5 * 60 * 1000) { // 5-minute cache
+        return { summary: cachedSummaries.summary };
       }
     }
 
@@ -196,7 +165,7 @@ export async function generateSummary(): Promise<{ summary?: string, error?: str
     try {
         const { summary } = await summarizeEntries({ entries: entries.map(e => e.content) });
         
-        cachedSummaries[userId] = { summary, timestamp: Date.now(), entryCount: entries.length };
+        cachedSummaries = { summary, timestamp: Date.now(), entryCount: entries.length };
         return { summary };
     } catch (e) {
         console.error("AI summary generation failed:", e);
@@ -205,15 +174,11 @@ export async function generateSummary(): Promise<{ summary?: string, error?: str
 }
 
 export async function generateActivitySuggestions(): Promise<{ suggestions?: ActivitySuggestion[], error?: string }> {
-    const userId = await getUserId();
-    if (!userId) return { error: 'User not authenticated' };
-    
     const entries = await getJournalEntries();
-    const cached = cachedSuggestions[userId];
 
-    if (cached && cached.entryCount === entries.length) {
-       if (Date.now() - cached.timestamp < 5 * 60 * 1000) {
-        return { suggestions: cached.suggestions };
+    if (cachedSuggestions && cachedSuggestions.entryCount === entries.length) {
+       if (Date.now() - cachedSuggestions.timestamp < 5 * 60 * 1000) {
+        return { suggestions: cachedSuggestions.suggestions };
       }
     }
     
@@ -224,7 +189,7 @@ export async function generateActivitySuggestions(): Promise<{ suggestions?: Act
     try {
         const result = await generateSuggestions({ entries: entries.slice(0, 5).map(e => e.content) });
         
-        cachedSuggestions[userId] = { suggestions: result.suggestions, timestamp: Date.now(), entryCount: entries.length };
+        cachedSuggestions = { suggestions: result.suggestions, timestamp: Date.now(), entryCount: entries.length };
 
         return { suggestions: result.suggestions };
     } catch (e) {
@@ -234,9 +199,6 @@ export async function generateActivitySuggestions(): Promise<{ suggestions?: Act
 }
 
 export async function generateWeeklySummary(): Promise<{ summary?: string, error?: string }> {
-    const userId = await getUserId();
-    if (!userId) return { error: 'User not authenticated' };
-
     const allEntries = await getJournalEntries();
     const oneWeekAgo = subDays(new Date(), 7);
 

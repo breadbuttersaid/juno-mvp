@@ -1,27 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getUserFromCookie } from '@/lib/auth';
-
-const protectedRoutes = ['/dashboard', '/journal', '/insights', '/recap', '/chat', '/export'];
-const authRoutes = ['/login', '/signup'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const user = await getUserFromCookie(request.cookies);
 
-  // If trying to access a protected route without being authenticated, redirect to login
-  if (!user && protectedRoutes.some(p => pathname.startsWith(p))) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // If authenticated and trying to access an auth route, redirect to dashboard
-  if (user && authRoutes.some(p => pathname.startsWith(p))) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // If at root, redirect based on auth state
+  // If at root, redirect to dashboard
   if (pathname === '/') {
-    const url = user ? '/dashboard' : '/login';
-    return NextResponse.redirect(new URL(url, request.url));
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();
