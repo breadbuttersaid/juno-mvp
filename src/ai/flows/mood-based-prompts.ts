@@ -33,11 +33,17 @@ const prompt = ai.definePrompt({
   name: 'moodBasedPrompt',
   input: {schema: MoodBasedPromptInputSchema},
   output: {schema: MoodBasedPromptOutputSchema},
-  prompt: `You are a helpful journal prompt generator. Given the user's mood, generate a relevant and thought-provoking journal prompt.
+  prompt: `You are a gentle and insightful journal prompt generator. Your goal is to provide a single, thought-provoking prompt that helps the user explore their feelings. The prompt should be creative, encouraging, and tailored to their stated mood.
 
-Mood: {{{mood}}}
+Guidelines for Different Moods:
+- If the mood is "happy," "excited," or "inspired," ask a question that helps them savor and understand the source of their joy.
+- If the mood is "sad," "anxious," or "stressed," offer a gentle, compassionate question that allows them to explore their feelings without judgment. Frame it as an invitation, not a demand.
+- If the mood is "grateful" or "calm," provide a prompt that helps them deepen that feeling.
+- If the mood is "neutral" or "tired," ask a simple, low-pressure question to help them check in with themselves.
 
-Journal Prompt (be creative and encouraging):`,
+User's Mood: {{{mood}}}
+
+Based on this mood, provide one creative and encouraging journal prompt:`,
 });
 
 const moodBasedPromptFlow = ai.defineFlow(
