@@ -75,7 +75,7 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
     happy: { label: "Happy", color: "#34D399" },
     excited: { label: "Excited", color: "#FBBF24" },
     neutral: { label: "Neutral", color: "#A3A3A3" },
-    sad: { label: "Sad", color: "#BDB2FF" },
+    sad: { label: "Sad", color: "#C7B9E3" },
     anxious: { label: "Anxious", color: "#F87171" },
     grateful: { label: "Grateful", color: "#EC4899" },
     stressed: { label: "Stressed", color: "#FB923C" },
