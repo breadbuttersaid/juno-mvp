@@ -36,6 +36,7 @@ export async function login(
     if (error instanceof z.ZodError) {
       return { error: error.errors.map((e) => e.message).join(', ') };
     }
+    console.error('Login error:', error);
     return { error: 'An unexpected error occurred.' };
   }
 }
@@ -52,13 +53,20 @@ export async function signup(
             return { error: 'An account with this email already exists.' };
         }
 
+        const newId = String(mockUsers.length + 1);
         const newUser: User = {
-            id: String(mockUsers.length + 1),
+            id: newId,
             email,
             password, // In a real app, hash and salt the password!
         };
 
         mockUsers.push(newUser);
+        
+        // This is a hack for the in-memory adapter to know about the new user.
+        // In a real DB adapter, this would not be needed.
+        // @ts-ignore
+        lucia.adapter.users.set(newId, newUser);
+
 
         const session = await lucia.createSession(newUser.id, {});
         const sessionCookie = lucia.createSessionCookie(session.id);
@@ -69,6 +77,7 @@ export async function signup(
         if (error instanceof z.ZodError) {
             return { error: error.errors.map((e) => e.message).join(', ') };
         }
+        console.error('Signup error:', error);
         return { error: 'An unexpected error occurred.' };
     }
 }

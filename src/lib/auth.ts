@@ -1,10 +1,8 @@
 import { Lucia } from 'lucia';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
-import type { Session, User as LuciaUser } from 'lucia';
+import type { Session, User as LuciaUser, Adapter } from 'lucia';
 import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
-
-import { NodeNextRequestAdapter } from 'lucia/oslo/adapters';
 import type { User } from './types';
 
 // MOCK ADAPTER - in a real app, use an adapter for your database
@@ -16,30 +14,36 @@ const mockUsers: User[] = [
     { id: '2', email: 'friend@example.com', password: 'password' },
 ];
 
-const sessions = new Map<string, Session>();
+const sessions = new Map<string, Omit<Session, 'fresh' | 'userId'> & { userId: string }>();
 const users = new Map<string, User>(mockUsers.map(u => [u.id, u]));
 
-const adapter = {
+const adapter: Adapter = {
   async getSessionAndUser(sessionId: string): Promise<[Session, LuciaUser] | [null, null]> {
     const session = sessions.get(sessionId);
     if (!session) return [null, null];
     
     const user = users.get(session.userId);
     if (!user) return [null, null];
+    
+    const { userId, ...sessionAttributes } = session;
 
-    return [session, user as LuciaUser];
+    return [
+        { id: sessionId, userId, fresh: false, ...sessionAttributes }, 
+        { id: user.id, ...user }
+    ];
   },
   async getUserSessions(userId: string): Promise<Session[]> {
     const userSessions: Session[] = [];
-    sessions.forEach(session => {
+    sessions.forEach((session, sessionId) => {
         if (session.userId === userId) {
-            userSessions.push(session);
+            userSessions.push({ id: sessionId, fresh: false, ...session });
         }
     });
     return userSessions;
   },
   async setSession(session: Session): Promise<void> {
-    sessions.set(session.id, session);
+    const { userId, ...sessionAttributes } = session;
+    sessions.set(session.id, { userId, ...sessionAttributes });
   },
   async updateSessionExpiration(sessionId: string, expiresAt: Date): Promise<void> {
     const session = sessions.get(sessionId);
@@ -51,11 +55,13 @@ const adapter = {
     sessions.delete(sessionId);
   },
   async deleteUserSessions(userId: string): Promise<void> {
+    const sessionsToDelete: string[] = [];
     sessions.forEach((session, id) => {
         if (session.userId === userId) {
-            sessions.delete(id);
+            sessionsToDelete.push(id);
         }
     });
+    sessionsToDelete.forEach(id => sessions.delete(id));
   },
 };
 
@@ -69,6 +75,7 @@ export const lucia = new Lucia(adapter, {
   },
   getUserAttributes: (attributes) => {
     return {
+      id: attributes.id,
       email: attributes.email,
     };
   },
@@ -77,7 +84,7 @@ export const lucia = new Lucia(adapter, {
 declare module 'lucia' {
   interface Register {
     Lucia: typeof lucia;
-    DatabaseUserAttributes: Omit<User, 'id'>;
+    DatabaseUserAttributes: Omit<User, 'password'>;
   }
 }
 
@@ -90,11 +97,11 @@ export const getUserFromCookie = cache(async (cookieStore: ReadonlyRequestCookie
   try {
     if (session && session.fresh) {
       const sessionCookie = lucia.createSessionCookie(session.id);
-      cookieStore.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+      cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
     }
     if (!session) {
       const sessionCookie = lucia.createBlankSessionCookie();
-      cookieStore.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+      cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
     }
   } catch {
     // Next.js throws error when attempting to set cookies when rendering page
