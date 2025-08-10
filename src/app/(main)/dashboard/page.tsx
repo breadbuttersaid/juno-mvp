@@ -12,7 +12,7 @@ import {
   ChartTooltipContent,
   ChartConfig,
 } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from 'recharts';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -72,17 +72,17 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
 
   const chartConfig = {
     value: { label: "Mood" },
-    happy: { label: "Happy", color: "#22c55e" },
-    excited: { label: "Excited", color: "#f59e0b" },
-    neutral: { label: "Neutral", color: "#a1a1aa" },
-    sad: { label: "Sad", color: "#3b82f6" },
-    anxious: { label: "Anxious", color: "#a855f7" },
-    grateful: { label: "Grateful", color: "#ec4899" },
-    stressed: { label: "Stressed", color: "#ef4444" },
-    tired: { label: "Tired", color: "#6b7280" },
-    calm: { label: "Calm", color: "#14b8a6" },
-    inspired: { label: "Inspired", color: "#d946ef" },
-    none: { label: "No Entry", color: "hsl(var(--muted))" }
+    happy: { label: "Happy", color: "#34D399" },
+    excited: { label: "Excited", color: "#FBBF24" },
+    neutral: { label: "Neutral", color: "#A3A3A3" },
+    sad: { label: "Sad", color: "#BDB2FF" },
+    anxious: { label: "Anxious", color: "#F87171" },
+    grateful: { label: "Grateful", color: "#EC4899" },
+    stressed: { label: "Stressed", color: "#FB923C" },
+    tired: { label: "Tired", color: "#9CA3AF" },
+    calm: { label: "Calm", color: "#60A5FA" },
+    inspired: { label: "Inspired", color: "#C084FC" },
+    none: { label: "No Entry", color: "#E5E7EB" }
   } satisfies ChartConfig;
   
   return (
@@ -121,8 +121,8 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
               />}
             />
             <Bar dataKey="value" radius={8}>
-                {data.map((d, i) => (
-                  <div key={i} style={{ fill: chartConfig[d.mood as keyof typeof chartConfig]?.color }} />
+               {data.map((d) => (
+                  <Cell key={d.date} fill={chartConfig[d.mood as keyof typeof chartConfig]?.color} />
                 ))}
             </Bar>
           </BarChart>
