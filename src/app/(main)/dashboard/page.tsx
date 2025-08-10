@@ -203,50 +203,51 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              Journaling Streak
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-5xl font-bold">{streak}</p>
-            <p className="text-muted-foreground">{streak === 1 ? 'day in a row' : 'days in a row'}. Keep it up!</p>
-          </CardContent>
-        </Card>
-
-        <Card className="flex flex-col justify-center items-center gap-4 bg-primary/10 border-primary/20">
-            <CardContent className="pt-6 text-center">
-                 <h2 className="text-2xl font-bold text-foreground">Ready to write?</h2>
-                 <p className="text-muted-foreground mb-4">Create a new entry to capture your thoughts.</p>
-                <Button asChild size="lg">
-                <Link href="/journal">
-                    <PlusCircle className="mr-2 h-5 w-5" />
-                    New Journal Entry
-                </Link>
-                </Button>
-            </CardContent>
-        </Card>
-        
-        <Card>
-            <CardHeader>
-                <CardTitle>Total Entries</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-5xl font-bold">{entries.length}</p>
-                 <p className="text-muted-foreground">{entries.length === 1 ? 'entry so far' : 'entries so far'}.</p>
-            </CardContent>
-        </Card>
-      
-        <div className="lg:col-span-2">
-             <MoodChart entries={entries} />
-        </div>
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content Column */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="flex flex-col justify-center items-center gap-4 bg-primary/10 border-primary/20 text-center">
+              <CardHeader>
+                   <h2 className="text-2xl font-bold text-foreground">Ready to write?</h2>
+                   <p className="text-muted-foreground">Create a new entry to capture your thoughts.</p>
+              </CardHeader>
+              <CardContent>
+                  <Button asChild size="lg">
+                  <Link href="/journal">
+                      <PlusCircle className="mr-2 h-5 w-5" />
+                      New Journal Entry
+                  </Link>
+                  </Button>
+              </CardContent>
+          </Card>
+          <MoodChart entries={entries} />
           <RecentEntries entries={entries} />
         </div>
-        
+
+        {/* Right Sidebar Column */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                Journaling Streak
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-5xl font-bold">{streak}</p>
+              <p className="text-muted-foreground">{streak === 1 ? 'day in a row' : 'days in a row'}. Keep it up!</p>
+            </CardContent>
+          </Card>
+          <Card>
+              <CardHeader>
+                  <CardTitle>Total Entries</CardTitle>
+              </CardHeader>
+              <CardContent>
+                  <p className="text-5xl font-bold">{entries.length}</p>
+                   <p className="text-muted-foreground">{entries.length === 1 ? 'entry so far' : 'entries so far'}.</p>
+              </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
