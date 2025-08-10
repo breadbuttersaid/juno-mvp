@@ -185,8 +185,8 @@ export default function DashboardPage() {
             <Skeleton className="h-40" />
             <Skeleton className="h-40" />
             <Skeleton className="h-40" />
-            <Skeleton className="h-64 md:col-span-3" />
-            <Skeleton className="h-64 md:col-span-3" />
+            <Skeleton className="h-64 md:col-span-2 lg:col-span-3" />
+            <Skeleton className="h-64 md:col-span-2 lg:col-span-3" />
         </div>
       </div>
     )
@@ -240,10 +240,10 @@ export default function DashboardPage() {
             </CardContent>
         </Card>
       
-        <div className="md:col-span-3">
+        <div className="lg:col-span-2">
              <MoodChart entries={entries} />
         </div>
-        <div className="md:col-span-3">
+        <div className="lg:col-span-1">
           <RecentEntries entries={entries} />
         </div>
         
