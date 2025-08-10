@@ -9,38 +9,54 @@ import type { User } from './types';
 
 // MOCK ADAPTER - in a real app, use an adapter for your database
 // e.g., @lucia-auth/adapter-prisma, @lucia-auth/adapter-drizzle
-const adapter = {
-  async getSessionAndUser(sessionId: string) {
-    const mockUsers: User[] = [
-      { id: '1', email: 'user@example.com', password: 'password' },
-      { id: '2', email: 'friend@example.com', password: 'password' },
-    ];
+// This is an in-memory adapter for demonstration purposes.
 
-    // This is a simplified mock. Lucia's real power comes from a proper DB session store.
-    // Here we are just pretending to validate the session. A real adapter would query the DB.
-    // We are decoding the session ID to find the user ID. THIS IS NOT SECURE FOR PRODUCTION.
-    try {
-        const userId = JSON.parse(atob(sessionId.split('.')[0])).sub;
-        const user = mockUsers.find(u => u.id === userId);
-        if (user) {
-             const session: Session = {
-                id: sessionId,
-                userId: user.id,
-                expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-                fresh: false,
-             };
-             return [session, user as LuciaUser];
-        }
-    } catch (e) {
-        // ignore error
-    }
-    return [null, null];
+const mockUsers: User[] = [
+    { id: '1', email: 'user@example.com', password: 'password' },
+    { id: '2', email: 'friend@example.com', password: 'password' },
+];
+
+const sessions = new Map<string, Session>();
+const users = new Map<string, User>(mockUsers.map(u => [u.id, u]));
+
+const adapter = {
+  async getSessionAndUser(sessionId: string): Promise<[Session, LuciaUser] | [null, null]> {
+    const session = sessions.get(sessionId);
+    if (!session) return [null, null];
+    
+    const user = users.get(session.userId);
+    if (!user) return [null, null];
+
+    return [session, user as LuciaUser];
   },
-  async getUserSessions(userId: string) { return [] },
-  async setSession(session: Session) {},
-  async updateSessionExpiration(sessionId: string, expiresAt: Date) {},
-  async deleteSession(sessionId: string) {},
-  async deleteUserSessions(userId: string) {},
+  async getUserSessions(userId: string): Promise<Session[]> {
+    const userSessions: Session[] = [];
+    sessions.forEach(session => {
+        if (session.userId === userId) {
+            userSessions.push(session);
+        }
+    });
+    return userSessions;
+  },
+  async setSession(session: Session): Promise<void> {
+    sessions.set(session.id, session);
+  },
+  async updateSessionExpiration(sessionId: string, expiresAt: Date): Promise<void> {
+    const session = sessions.get(sessionId);
+    if (session) {
+      sessions.set(sessionId, { ...session, expiresAt });
+    }
+  },
+  async deleteSession(sessionId: string): Promise<void> {
+    sessions.delete(sessionId);
+  },
+  async deleteUserSessions(userId: string): Promise<void> {
+    sessions.forEach((session, id) => {
+        if (session.userId === userId) {
+            sessions.delete(id);
+        }
+    });
+  },
 };
 
 
