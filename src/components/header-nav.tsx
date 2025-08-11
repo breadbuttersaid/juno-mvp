@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -5,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { BookOpen, Bot, LayoutDashboard, FileDown, BarChart3, CalendarCheck2, Menu } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
@@ -59,7 +60,10 @@ export function HeaderNav() {
             </Button>
           </SheetTrigger>
           <SheetContent side="right">
-            <nav className="grid gap-6 text-lg font-medium">
+            <SheetHeader>
+                <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            </SheetHeader>
+            <nav className="grid gap-6 text-lg font-medium pt-4">
               <Link href="/dashboard" className="mb-6" onClick={handleLinkClick}>
                 <Logo />
               </Link>
