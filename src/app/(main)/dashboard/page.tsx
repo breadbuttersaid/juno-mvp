@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -86,7 +87,7 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
   } satisfies ChartConfig;
   
   return (
-    <Card>
+    <Card className="col-span-1 md:col-span-2">
       <CardHeader>
         <CardTitle>Mood Tracker</CardTitle>
         <CardDescription>Your mood over the last 7 days.</CardDescription>
@@ -135,7 +136,7 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
 function RecentEntries({ entries }: { entries: JournalEntry[] }) {
   const recent = entries.slice(0, 3);
   return (
-     <Card>
+     <Card className="col-span-1 md:col-span-2">
       <CardHeader>
         <CardTitle>Recent Entries</CardTitle>
         <CardDescription>A quick look at your latest thoughts.</CardDescription>
@@ -203,10 +204,8 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content Column */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="flex flex-col justify-center items-center gap-4 bg-primary/10 border-primary/20 text-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="md:col-span-2 flex flex-col justify-center items-center gap-4 bg-primary/10 border-primary/20 text-center">
               <CardHeader>
                    <h2 className="text-2xl font-bold text-foreground">Ready to write?</h2>
                    <p className="text-muted-foreground">Create a new entry to capture your thoughts.</p>
@@ -220,12 +219,6 @@ export default function DashboardPage() {
                   </Button>
               </CardContent>
           </Card>
-          <MoodChart entries={entries} />
-          <RecentEntries entries={entries} />
-        </div>
-
-        {/* Right Sidebar Column */}
-        <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -247,7 +240,8 @@ export default function DashboardPage() {
                    <p className="text-muted-foreground">{entries.length === 1 ? 'entry so far' : 'entries so far'}.</p>
               </CardContent>
           </Card>
-        </div>
+          <MoodChart entries={entries} />
+          <RecentEntries entries={entries} />
       </div>
     </div>
   );
