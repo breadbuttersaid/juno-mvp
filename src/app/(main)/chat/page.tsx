@@ -74,10 +74,10 @@ export default function ChatPage() {
       <CardHeader>
         <CardTitle className="font-headline text-3xl flex items-center gap-2">
           <Bot />
-          AI Companion
+          Juno
         </CardTitle>
         <CardDescription>
-          Talk about what's on your mind. Your AI friend is here to listen, reflect on your past entries, and help you explore your thoughts.
+          Talk about what's on your mind. Juno is here to listen, reflect on your past entries, and help you explore your thoughts.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">

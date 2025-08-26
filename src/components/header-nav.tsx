@@ -15,7 +15,7 @@ const menuItems = [
   { href: '/journal', label: 'Journal', icon: BookOpen },
   { href: '/insights', label: 'My Insights', icon: BarChart3 },
   { href: '/recap', label: 'Weekly Recap', icon: CalendarCheck2 },
-  { href: '/chat', label: 'AI Companion', icon: Bot },
+  { href: '/chat', label: 'Juno', icon: Bot },
   { href: '/export', label: 'Export', icon: FileDown },
 ];
 
