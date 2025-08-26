@@ -16,6 +16,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from 'recharts';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useJournalStore } from '@/stores/journal-store';
 
 function calculateStreak(entries: Pick<JournalEntry, 'created_at'>[]): number {
   if (entries.length === 0) return 0;
@@ -161,6 +162,11 @@ export default function DashboardPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(true);
+  const { openJournalDialog, setEntries: setStoreEntries } = useJournalStore();
+
+  const handleNewEntry = () => {
+    openJournalDialog(null);
+  };
 
   useEffect(() => {
     async function getJournalData() {
@@ -168,6 +174,7 @@ export default function DashboardPage() {
         const fetchedEntries = (await getJournalEntries()) as JournalEntry[];
         setEntries(fetchedEntries || []);
         setStreak(calculateStreak(fetchedEntries as Pick<JournalEntry, 'created_at'>[]));
+        setStoreEntries(fetchedEntries || []);
       } catch (error) {
         console.error("Failed to fetch journal data", error);
       } finally {
@@ -175,7 +182,7 @@ export default function DashboardPage() {
       }
     }
     getJournalData();
-  }, []);
+  }, [setStoreEntries]);
 
   if (loading) {
     return (
@@ -211,11 +218,9 @@ export default function DashboardPage() {
                    <p className="text-muted-foreground">Create a new entry to capture your thoughts.</p>
               </CardHeader>
               <CardContent>
-                  <Button asChild size="lg">
-                  <Link href="/journal">
-                      <PlusCircle className="mr-2 h-5 w-5" />
-                      New Journal Entry
-                  </Link>
+                  <Button onClick={handleNewEntry} size="lg">
+                    <PlusCircle className="mr-2 h-5 w-5" />
+                    New Journal Entry
                   </Button>
               </CardContent>
           </Card>

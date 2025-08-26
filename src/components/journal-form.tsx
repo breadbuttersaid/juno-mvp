@@ -16,11 +16,12 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, Smile, Frown, Meh, Sparkles, Heart, HandHeart, Zap, BatteryLow, Feather, Lightbulb, WandSparkles } from 'lucide-react';
-import { addJournalEntry, updateJournalEntry, generateWritingPromptsAction } from '@/lib/actions/journal';
+import { addJournalEntry, updateJournalEntry, generateWritingPromptsAction, getJournalEntries } from '@/lib/actions/journal';
 import { useToast } from '@/hooks/use-toast';
 import type { JournalEntry } from '@/lib/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useJournalStore } from '@/stores/journal-store';
 
 const moods = [
   { value: 'happy', icon: Smile, label: 'Happy' },
@@ -56,6 +57,7 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
   const [isPromptLoading, setIsPromptLoading] = useState(false);
   const [prompts, setPrompts] = useState<string[]>([]);
   const isEditing = !!entry;
+  const { setEntries } = useJournalStore();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -101,7 +103,7 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
   }, [debouncedContent, getPrompts]);
 
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     startTransition(async () => {
       try {
         if (isEditing) {
@@ -117,6 +119,8 @@ export function JournalForm({ entry, onSave, onCancel }: JournalFormProps) {
             description: 'Your journal entry has been saved.',
           });
         }
+        const updatedEntries = await getJournalEntries();
+        setEntries(updatedEntries);
         onSave();
       } catch (error) {
         console.error('Failed to save entry', error);

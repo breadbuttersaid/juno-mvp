@@ -1,4 +1,7 @@
+'use client';
+
 import { HeaderNav } from '@/components/header-nav';
+import { JournalDialog } from '@/components/journal-dialog';
 
 export default function MainLayout({
   children,
@@ -13,6 +16,7 @@ export default function MainLayout({
           <main className="flex-1 p-4 sm:p-6 animate-in fade-in duration-500">
             {children}
           </main>
+          <JournalDialog />
       </div>
   );
 }

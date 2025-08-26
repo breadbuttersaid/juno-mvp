@@ -20,19 +20,24 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { deleteJournalEntry } from '@/lib/actions/journal';
+import { deleteJournalEntry, getJournalEntries } from '@/lib/actions/journal';
 import { useToast } from '@/hooks/use-toast';
 import type { JournalEntry } from '@/lib/types';
+import { useJournalStore } from '@/stores/journal-store';
+
 
 export function JournalEntryActions({ entry, onEdit }: { entry: JournalEntry, onEdit: (entry: JournalEntry) => void }) {
   const { toast } = useToast();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { setEntries } = useJournalStore();
 
   const handleDelete = () => {
     startTransition(async () => {
       try {
         await deleteJournalEntry(entry.id);
+        const updatedEntries = await getJournalEntries();
+        setEntries(updatedEntries);
         toast({
           title: 'Success',
           description: 'Journal entry has been deleted.',
