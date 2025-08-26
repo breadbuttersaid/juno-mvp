@@ -15,8 +15,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/journal', label: 'Journal', icon: BookOpen },
-  { href: '/insights', label: 'My Insights', icon: BarChart3 },
-  { href: '/recap', label: 'Weekly Recap', icon: CalendarCheck2 },
+  { href: '/insights', label: 'Insights', icon: BarChart3 },
+  { href: '/recap', label: 'Recap', icon: CalendarCheck2 },
   { href: '/chat', label: 'Juno\'s Corner', icon: Bot },
 ];
 

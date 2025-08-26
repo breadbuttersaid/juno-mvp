@@ -64,7 +64,7 @@ export default function InsightsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-headline font-bold flex items-center gap-2">
-            <BarChart3 /> My Insights
+            <BarChart3 /> Insights
           </h1>
           <p className="text-muted-foreground">
             Discover recurring themes and patterns in your journal.
