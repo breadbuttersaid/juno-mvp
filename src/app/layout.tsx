@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
-import { Inter } from 'next/font/google';
+import { DM_Sans } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const dm_sans = DM_Sans({ subsets: ['latin'], variable: '--font-sans' });
 
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} font-sans bg-background text-foreground`}>
+      <body className={`${dm_sans.className} font-sans bg-background text-foreground`}>
         <ThemeProvider
             attribute="class"
             defaultTheme="system"
