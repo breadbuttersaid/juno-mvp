@@ -46,9 +46,44 @@ export function HeaderNav() {
       ))}
     </div>
   );
+  
+  const profileMenu = (
+     <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="secondary" size="icon" className="rounded-full">
+            <CircleUser className="h-5 w-5" />
+            <span className="sr-only">Toggle user menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+            <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                    <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                    <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                    <span className="ml-2">Appearance</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+                <Link href="/export" className='flex items-center w-full'>
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Export Entries
+                </Link>
+            </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+  )
 
   const mobileNav = (
-    <div className="md:hidden">
+    <div className="md:hidden flex items-center gap-2">
+      {profileMenu}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon">
@@ -95,40 +130,6 @@ export function HeaderNav() {
     </div>
   );
 
-  const profileMenu = (
-     <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="secondary" size="icon" className="rounded-full">
-            <CircleUser className="h-5 w-5" />
-            <span className="sr-only">Toggle user menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-            <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                    <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                    <span className="ml-2">Appearance</span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-            </DropdownMenuSub>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link href="/export" className='flex items-center w-full'>
-                    <FileDown className="h-4 w-4 mr-2" />
-                    Export Entries
-                </Link>
-            </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-  )
-
   return (
     <nav className="flex w-full items-center">
       <Link href="/dashboard" className="mr-6">
@@ -143,7 +144,9 @@ export function HeaderNav() {
         {profileMenu}
       </div>
 
-      {mobileNav}
+      <div className="md:hidden ml-auto">
+        {mobileNav}
+      </div>
     </nav>
   );
 }
