@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${dm_sans.className} font-sans bg-background text-foreground`}>
+      <body className={`${dm_sans.variable} font-sans bg-background text-foreground`}>
         <ThemeProvider
             attribute="class"
             defaultTheme="system"
