@@ -49,18 +49,32 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
   const last7Days = Array.from({ length: 7 }).map((_, i) => subDays(new Date(), i)).reverse();
 
   const moodToValue = {
-    happy: 4,
+    happy: 5,
     excited: 5,
+    grateful: 5,
+    inspired: 5,
+    calm: 4,
     neutral: 3,
     sad: 2,
     anxious: 1,
-    grateful: 5,
     stressed: 1,
     tired: 2,
-    calm: 4,
-    inspired: 5,
-    none: 0
+    none: 0,
   };
+
+  const moodColorMapping: Record<string, string> = {
+      happy: 'positive',
+      excited: 'positive',
+      grateful: 'positive',
+      inspired: 'positive',
+      calm: 'positive',
+      neutral: 'neutral',
+      sad: 'negative',
+      anxious: 'negative',
+      stressed: 'negative',
+      tired: 'negative',
+      none: 'none'
+  }
 
   const data = last7Days.map(date => {
     const entry = entries.find(e => format(parseISO(e.created_at), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'));
@@ -74,17 +88,21 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
 
   const chartConfig = {
     value: { label: "Mood" },
-    happy: { label: "Happy", color: "#34D399" },
-    excited: { label: "Excited", color: "#FBBF24" },
+    positive: { label: "Positive", color: "#34D399" },
     neutral: { label: "Neutral", color: "#A3A3A3" },
-    sad: { label: "Sad", color: "#C7B9E3" },
-    anxious: { label: "Anxious", color: "#F87171" },
-    grateful: { label: "Grateful", color: "#EC4899" },
-    stressed: { label: "Stressed", color: "#FB923C" },
-    tired: { label: "Tired", color: "#9CA3AF" },
-    calm: { label: "Calm", color: "#60A5FA" },
-    inspired: { label: "Inspired", color: "#C084FC" },
-    none: { label: "No Entry", color: "#E5E7EB" }
+    negative: { label: "Negative", color: "#F87171" },
+    none: { label: "No Entry", color: "#E5E7EB" },
+
+    happy: { label: "Happy", color: "var(--color-positive)" },
+    excited: { label: "Excited", color: "var(--color-positive)" },
+    grateful: { label: "Grateful", color: "var(--color-positive)" },
+    inspired: { label: "Inspired", color: "var(--color-positive)" },
+    calm: { label: "Calm", color: "var(--color-positive)" },
+    
+    sad: { label: "Sad", color: "var(--color-negative)" },
+    anxious: { label: "Anxious", color: "var(--color-negative)" },
+    stressed: { label: "Stressed", color: "var(--color-negative)" },
+    tired: { label: "Tired", color: "var(--color-negative)" },
   } satisfies ChartConfig;
   
   return (
@@ -108,24 +126,35 @@ function MoodChart({ entries }: { entries: JournalEntry[] }) {
               cursor={false}
               content={<ChartTooltipContent 
                 hideLabel 
-                formatter={(value, name, props) => (
-                  <div className="flex items-center gap-2">
-                     <div
-                        className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
-                        style={{ backgroundColor: chartConfig[props.payload.mood as keyof typeof chartConfig]?.color }}
-                      />
-                    <div className="flex flex-col">
-                      <span className="font-bold">{chartConfig[props.payload.mood as keyof typeof chartConfig]?.label}</span>
-                      <span className="text-muted-foreground text-xs">{props.payload.date}</span>
+                formatter={(value, name, props) => {
+                   const mood = props.payload.mood as keyof typeof chartConfig;
+                   const config = chartConfig[mood];
+                   const colorKey = moodColorMapping[mood];
+                   const displayConfig = chartConfig[colorKey as keyof typeof chartConfig];
+
+                   return (
+                    <div className="flex items-center gap-2">
+                        <div
+                            className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                            style={{ backgroundColor: displayConfig.color }}
+                        />
+                        <div className="flex flex-col">
+                        <span className="font-bold">{config.label}</span>
+                        <span className="text-muted-foreground text-xs">{props.payload.date}</span>
+                        </div>
                     </div>
-                  </div>
-                )}
+                   )
+                }}
               />}
             />
             <Bar dataKey="value" radius={8}>
-               {data.map((d) => (
-                  <Cell key={d.date} fill={chartConfig[d.mood as keyof typeof chartConfig]?.color} />
-                ))}
+               {data.map((d) => {
+                  const colorKey = moodColorMapping[d.mood] || 'none';
+                  const config = chartConfig[colorKey as keyof typeof chartConfig];
+                  return (
+                    <Cell key={d.date} fill={config.color} />
+                  )
+                })}
             </Bar>
           </BarChart>
         </ChartContainer>
@@ -189,12 +218,12 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <Skeleton className="h-10 w-1/2" />
         <Skeleton className="h-6 w-3/4" />
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Skeleton className="h-48 md:col-span-2 lg:col-span-4" />
             <Skeleton className="h-40" />
             <Skeleton className="h-40" />
-            <Skeleton className="h-40" />
-            <Skeleton className="h-64 md:col-span-2 lg:col-span-3" />
-            <Skeleton className="h-64 md:col-span-2 lg:col-span-3" />
+            <Skeleton className="h-64 md:col-span-2" />
+            <Skeleton className="h-64 md:col-span-2 lg:col-span-4" />
         </div>
       </div>
     )
@@ -211,8 +240,8 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="md:col-span-2 flex flex-col justify-center items-center gap-4 bg-primary/10 border-primary/20 text-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="md:col-span-2 lg:col-span-4 flex flex-col justify-center items-center gap-4 bg-primary/10 border-primary/20 text-center">
               <CardHeader>
                    <h2 className="text-2xl font-bold text-foreground">Ready to write?</h2>
                    <p className="text-muted-foreground">Create a new entry to capture your thoughts.</p>
@@ -224,7 +253,7 @@ export default function DashboardPage() {
                   </Button>
               </CardContent>
           </Card>
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-primary" />
@@ -236,7 +265,7 @@ export default function DashboardPage() {
               <p className="text-muted-foreground">{streak === 1 ? 'day in a row' : 'days in a row'}. Keep it up!</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="lg:col-span-2">
               <CardHeader>
                   <CardTitle>Total Entries</CardTitle>
               </CardHeader>
