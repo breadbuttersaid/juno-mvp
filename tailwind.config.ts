@@ -19,8 +19,8 @@ const config = {
     },
     extend: {
       fontFamily: {
-        body: ['"Inter"', 'sans-serif'],
-        headline: ['"Inter"', 'sans-serif'],
+        body: ['"Alegreya"', 'serif'],
+        headline: ['"Alegreya"', 'serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
